@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 
 public class Quad : MonoBehaviour {
+    public Node node;
     private string shaderTime = "Time_Current";
     private GameObject emissionShader;
     public GameObject EmissionShader {
@@ -27,4 +28,22 @@ public class Quad : MonoBehaviour {
     public void OnMouseExit() {
         EmissionShader.SetActive(false);
     }
+}
+
+public class Node {//这样能把这个抽象的
+    public bool walkable;
+    public Vector3 worldPosition;
+    public int gridX;
+    public int gridY;
+    public int gCost;
+    public int hCost;
+    public Node parent;
+    public Node(bool _walkable, Vector3 _worldPos, int _gridX, int _gridY) {
+        walkable = _walkable;
+        worldPosition = _worldPos;
+        gridX = _gridX;
+        gridY = _gridY;
+    }
+
+    public int fCost => gCost +hCost;
 }
