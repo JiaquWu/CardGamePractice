@@ -22,19 +22,29 @@ public class Quad : MonoBehaviour {
         EmissionShader.SetActive(false);
     }
     public void OnMouseEnter() {
-        emissionShader.GetComponent<Renderer>().material.SetFloat(shaderTime,Time.time);
-        EmissionShader.SetActive(true);
+        EnableEmissionShader(true);
     }
     public void OnMouseExit() {
-        EmissionShader.SetActive(false);
+        EnableEmissionShader(false);
+    }
+    public void EnableEmissionShader(bool enable) {
+        if(enable) {
+            emissionShader.GetComponent<Renderer>().material.SetFloat(shaderTime,Time.time);
+            EmissionShader.SetActive(true);
+        }else {
+            EmissionShader.SetActive(false);
+        }
+    }
+    public virtual void InitializeNode(bool _walkable, Vector3 _worldPos, int _gridX, int _gridY) {
+        
     }
 }
 
-public class Node {//这样能把这个抽象的
+public class Node {//a星算法相关
     public bool walkable;
     public Vector3 worldPosition;
     public int gridX;
-    public int gridY;
+    public int gridY;//这里和生成坐标里面的不一样,因为preparation里面的node和算法不相关
     public int gCost;
     public int hCost;
     public Node parent;
