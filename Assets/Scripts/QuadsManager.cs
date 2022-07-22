@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using UnityEngine;
 
 public class QuadsManager : SingletonManager<QuadsManager> {
@@ -9,7 +10,7 @@ public class QuadsManager : SingletonManager<QuadsManager> {
             if(deployQuads == null) {
                 deployQuads = transform.Find("DeployQuads");
                 if(deployQuads == null) {
-                    Debug.LogWarning("no deployQuads exists");
+                    UnityEngine.Debug.LogWarning("no deployQuads exists");
                     GameObject go = new GameObject("DeployQuads");
                     go.transform.SetParent(transform);
                 }
@@ -23,7 +24,7 @@ public class QuadsManager : SingletonManager<QuadsManager> {
             if(enemyQuads == null) {
                 enemyQuads = transform.Find("EnemyQuads");
                 if(enemyQuads == null) {
-                    Debug.LogWarning("no enemyQuads exists");
+                    UnityEngine.Debug.LogWarning("no enemyQuads exists");
                     GameObject go = new GameObject("EnemyQuads");
                     go.transform.SetParent(transform);
                 }
@@ -37,7 +38,7 @@ public class QuadsManager : SingletonManager<QuadsManager> {
             if(preparationQuads == null) {
                 preparationQuads = transform.Find("PreparationQuads");
                 if(preparationQuads == null) {
-                    Debug.LogWarning("no preparationQuads exists");
+                    UnityEngine.Debug.LogWarning("no preparationQuads exists");
                     GameObject go = new GameObject("PreparationQuads");
                     go.transform.SetParent(transform);
                 }
@@ -52,6 +53,7 @@ public class QuadsManager : SingletonManager<QuadsManager> {
     private Dictionary<Vector2,Quad> findPathDict = new Dictionary<Vector2, Quad>();//preparation和enemy区域的棋子和这个有关系
     private int quadSizeX;//这个是x轴总共能放多少个quad
     private int quadSizeY;
+    public int MaxSize => quadSizeX * quadSizeY;
     Vector2 gridWorldSize;//这个是说坐标系的X轴有多宽
     float nodeRadius;
     Node[,] grid;//所有跟寻路有关的node,(0,0)是地图里面的(1,0),因为不包括preparation
@@ -82,7 +84,7 @@ public class QuadsManager : SingletonManager<QuadsManager> {
                 if(findPathDict.ContainsKey(new Vector2(x,y+1))) {//y+1是因为不包括preparation区域
                     grid[x,y] = findPathDict[new Vector2(x,y+1)].node;
                 }else {
-                    Debug.LogWarning("key is missing!");//目前编辑器中生成地图也会执行到这里,目前不用管
+                    UnityEngine.Debug.LogWarning("key is missing!");//目前编辑器中生成地图也会执行到这里,目前不用管
                 }
             }            
         }
@@ -107,7 +109,7 @@ public class QuadsManager : SingletonManager<QuadsManager> {
                //因为生成的时候是按quadCoordinates的顺序生成,因此这里也是这个顺序
                dict.Add(quadCoordinates[i],quad);
            }else {
-               Debug.Log("没有quad");
+               UnityEngine.Debug.Log("没有quad");
            }
         } 
     }
@@ -125,7 +127,7 @@ public class QuadsManager : SingletonManager<QuadsManager> {
         if(findPathDict.ContainsKey(coordinate)) {
             return findPathDict[coordinate];
         }else {
-            Debug.LogError("cannot find this quad");
+            UnityEngine.Debug.LogError("cannot find this quad");
             return null;
         }
     }
@@ -145,23 +147,28 @@ public class QuadsManager : SingletonManager<QuadsManager> {
         return neighbors;
     }
     private void FindPath(Vector3 startPos, Vector3 targetPos) { //A star algorhithm
+        Stopwatch sw = new Stopwatch();
+        sw.Start();
         Node startNode = NodeFromWorldPoint(startPos);
         Node targetNode = NodeFromWorldPoint(targetPos);
 
-        List<Node> openSet = new List<Node>();
+        Heap<Node> openSet = new Heap<Node>(MaxSize);
+        //List<Node> openSet = new List<Node>();
         HashSet<Node> closedSet = new HashSet<Node>();
         openSet.Add(startNode);
 
         while(openSet.Count > 0) {
-            Node currentNode = openSet[0];
-            for (int i = 1; i < openSet.Count; i++) {
-                if(openSet[i].fCost < currentNode.fCost || openSet[i].fCost == currentNode.fCost && openSet[i].hCost < currentNode.hCost) {
-                    currentNode = openSet[i];
-                }
-            }
-            openSet.Remove(currentNode);
+            Node currentNode = openSet.RemoveFirst();//heap!
+            // for (int i = 1; i < openSet.Count; i++) {
+            //     if(openSet[i].fCost < currentNode.fCost || openSet[i].fCost == currentNode.fCost && openSet[i].hCost < currentNode.hCost) {
+            //         currentNode = openSet[i];
+            //     }
+            // }
+            // openSet.Remove(currentNode);
             closedSet.Add(currentNode);
             if(currentNode == targetNode) {
+                sw.Stop();
+                UnityEngine.Debug.Log("Path found: " + sw.ElapsedMilliseconds);
                 RetracePath(startNode,targetNode);
                 return;
             }
@@ -191,7 +198,7 @@ public class QuadsManager : SingletonManager<QuadsManager> {
         }
         path.Reverse();
         foreach (var item in path) {
-            Debug.Log(new Vector2(item.gridX,item.gridY));
+            UnityEngine.Debug.Log(new Vector2(item.gridX,item.gridY));
             if(QuadFromNode(item).TryGetComponent<Quad>(out Quad quad)) {
                quad.EnableEmissionShader(true);
             } 

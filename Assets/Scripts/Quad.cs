@@ -18,8 +18,8 @@ public class Quad : MonoBehaviour {
             return emissionShader;
         }
     }
-    private void Awake() {
-        EmissionShader.SetActive(false);
+    protected void Start() {
+        EnableEmissionShader(false);
     }
     public void OnMouseEnter() {
         EnableEmissionShader(true);
@@ -29,7 +29,7 @@ public class Quad : MonoBehaviour {
     }
     public void EnableEmissionShader(bool enable) {
         if(enable) {
-            emissionShader.GetComponent<Renderer>().material.SetFloat(shaderTime,Time.time);
+            EmissionShader.GetComponent<Renderer>().material.SetFloat(shaderTime,Time.time);
             EmissionShader.SetActive(true);
         }else {
             EmissionShader.SetActive(false);
@@ -40,13 +40,14 @@ public class Quad : MonoBehaviour {
     }
 }
 
-public class Node {//a星算法相关
+public class Node : IHeapItem<Node> {//a星算法相关
     public bool walkable;
     public Vector3 worldPosition;
     public int gridX;
     public int gridY;//这里和生成坐标里面的不一样,因为preparation里面的node和算法不相关
     public int gCost;
     public int hCost;
+    int heapIndex;
     public Node parent;
     public Node(bool _walkable, Vector3 _worldPos, int _gridX, int _gridY) {
         walkable = _walkable;
@@ -56,4 +57,21 @@ public class Node {//a星算法相关
     }
 
     public int fCost => gCost +hCost;
+
+    public int HeapIndex {
+        get {
+            return heapIndex;
+        }
+        set {
+            heapIndex = value;
+        }
+    }
+
+    public int CompareTo(Node nodeToCompare) {
+        int compare = fCost.CompareTo(nodeToCompare.fCost);
+        if(compare == 0) {
+            compare = hCost.CompareTo(nodeToCompare.hCost);
+        }
+        return -compare;//更高的compare意味着消耗更大,所以在比较来看更不好
+    }
 }
