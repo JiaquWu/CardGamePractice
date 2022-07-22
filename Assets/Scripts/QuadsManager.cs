@@ -54,7 +54,7 @@ public class QuadsManager : SingletonManager<QuadsManager> {
     private int quadSizeY;
     Vector2 gridWorldSize;//这个是说坐标系的X轴有多宽
     float nodeRadius;
-    Node[,] grid;
+    Node[,] grid;//所有跟寻路有关的node,(0,0)是地图里面的(1,0),因为不包括preparation
     public Transform start;
     public Transform end;
     private void OnDrawGizmos() {
@@ -74,13 +74,13 @@ public class QuadsManager : SingletonManager<QuadsManager> {
         InitializeAllQuads();
         MapConfigurationSO map = MapManager.Instance.CurrentMapConfiguration;
         quadSizeX = map.QuadSizeX;
-        quadSizeY = map.QuadSizeY;
+        quadSizeY = map.QuadSizeY-1;//-1是因为quadSize是9
         grid = new Node[quadSizeX,quadSizeY];
-        gridWorldSize = new Vector2(map.QuadSizeX * map.ScaleRatio,map.QuadSizeY * map.ScaleRatio);
+        gridWorldSize = new Vector2(quadSizeX * map.ScaleRatio,quadSizeY * map.ScaleRatio);
         for (int x = 0; x < quadSizeX; x++) {
             for (int y = 0; y < quadSizeY; y++) {
                 if(findPathDict.ContainsKey(new Vector2(x,y+1))) {//y+1是因为不包括preparation区域
-                    grid[x,y] = findPathDict[new Vector2(x,y+1)].node;//这样不对,因为findpathdict是从(1,0)开始的
+                    grid[x,y] = findPathDict[new Vector2(x,y+1)].node;
                 }else {
                     Debug.LogWarning("key is missing!");//目前编辑器中生成地图也会执行到这里,目前不用管
                 }
@@ -102,7 +102,8 @@ public class QuadsManager : SingletonManager<QuadsManager> {
         int count = quadsParent.childCount;
         for (int i = 0; i < count; i++) {
            if(quadsParent.GetChild(i).TryGetComponent<Quad>(out Quad quad)) {
-               quad.node = new Node(true,quadsParent.GetChild(i).position,(int)quadCoordinates[i].x,(int)quadCoordinates[i].y);
+               quad.InitializeNode(true,quadsParent.GetChild(i).position,(int)quadCoordinates[i].x,(int)quadCoordinates[i].y);
+               //quad.node = new Node(true,quadsParent.GetChild(i).position,(int)quadCoordinates[i].x,(int)quadCoordinates[i].y);
                //因为生成的时候是按quadCoordinates的顺序生成,因此这里也是这个顺序
                dict.Add(quadCoordinates[i],quad);
            }else {
@@ -112,13 +113,21 @@ public class QuadsManager : SingletonManager<QuadsManager> {
     }
     public Node NodeFromWorldPoint(Vector3 worldPosition) {
         float percentX = (worldPosition.x - MapManager.Instance.CurrentMapConfiguration.OriginPoint.x) / gridWorldSize.x;
-        float percentY = (worldPosition.z - MapManager.Instance.CurrentMapConfiguration.OriginPoint.z) / gridWorldSize.y;
+        float percentY = (worldPosition.z - (MapManager.Instance.CurrentMapConfiguration.OriginPoint.z+1)) / gridWorldSize.y; //+1因为不算preparation
         percentX = Mathf.Clamp01(percentX);
         percentY = Mathf.Clamp01(percentY);
-        int x = Mathf.CeilToInt((quadSizeX-1) * percentX);
-        int y = Mathf.CeilToInt((quadSizeY-1) * percentY);
-        Debug.Log(new Vector2(x,y));
+        int x = Mathf.CeilToInt(quadSizeX * percentX) - 1;//这里是推算出来的要ceil,先算出百分比,ceil是因为最大7.5,7.0到7.5都是第八格,然后因为index要-1
+        int y = Mathf.CeilToInt(quadSizeY * percentY) - 1;//同理,因为这里quadSizeY是8,所以一样的
         return grid[x,y];
+    }
+    public Quad QuadFromNode(Node node) {
+        Vector2 coordinate = new Vector2(node.gridX,node.gridY);
+        if(findPathDict.ContainsKey(coordinate)) {
+            return findPathDict[coordinate];
+        }else {
+            Debug.LogError("cannot find this quad");
+            return null;
+        }
     }
     public List<Node> GetNeighbors(Node node) {
         List<Node> neighbors = new List<Node>();
@@ -181,9 +190,11 @@ public class QuadsManager : SingletonManager<QuadsManager> {
             currentNode = currentNode.parent;
         }
         path.Reverse();
-        foreach (var item in path)
-        {
-            Debug.Log(item.worldPosition);
+        foreach (var item in path) {
+            Debug.Log(new Vector2(item.gridX,item.gridY));
+            if(QuadFromNode(item).TryGetComponent<Quad>(out Quad quad)) {
+               quad.EnableEmissionShader(true);
+            } 
         }
     }
     int GetDistance(Node nodeA,Node nodeB) {
