@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using UnityEngine;
@@ -59,6 +60,8 @@ public class QuadsManager : SingletonManager<QuadsManager> {
     Node[,] grid;//所有跟寻路有关的node,(0,0)是地图里面的(1,0),因为不包括preparation,这个转换是地图自己做
     public Transform start;
     public Transform end;
+    PathRequestManager pathRequestManager => PathRequestManager.Instance;
+    MapConfigurationSO CurrentMap => MapManager.Instance.CurrentMapConfiguration;
     private void OnDrawGizmos() {
     }
     public void DeleteAllQuads() {
@@ -76,9 +79,13 @@ public class QuadsManager : SingletonManager<QuadsManager> {
         InitializeAllQuads();
         InitializeGrid();
     }
-    private void Update() {
-        FindPath(start.position,end.position);
+    private void Start() {
+        PathRequestManager.RequestPath(start.position,end.position,(pos,b)=>UnityEngine.Debug.Log("长度是" + pos.Length));
     }
+    private void Update() {
+        
+    }
+
     private void InitializeGrid() {
         MapConfigurationSO map = MapManager.Instance.CurrentMapConfiguration;
         quadSizeX = map.QuadSizeX;
@@ -110,7 +117,7 @@ public class QuadsManager : SingletonManager<QuadsManager> {
                quad.InitializeNode(true,quadsParent.GetChild(i).position,(int)quadCoordinates[i].x,(int)quadCoordinates[i].y);
                //quad.node = new Node(true,quadsParent.GetChild(i).position,(int)quadCoordinates[i].x,(int)quadCoordinates[i].y);
                //因为生成的时候是按quadCoordinates的顺序生成,因此这里也是这个顺序
-               dict.Add(quadCoordinates[i],quad);
+               dict.Add(quadCoordinates[i],quad);//所以字典里面的坐标并不是寻路的坐标,而是地图的坐标!
            }else {
                UnityEngine.Debug.Log("没有quad");
            }
@@ -124,11 +131,12 @@ public class QuadsManager : SingletonManager<QuadsManager> {
         percentY = Mathf.Clamp01(percentY);
         int x = Mathf.CeilToInt(quadSizeX * percentX) - 1;//这里是推算出来的要ceil,先算出百分比,ceil是因为最大7.5,7.0到7.5都是第八格,然后因为index要-1
         int y = Mathf.CeilToInt(quadSizeY * percentY) - 1;//同理,因为这里quadSizeY是8,所以一样的
+        UnityEngine.Debug.Log("坐标是: " + new Vector2(x,y));
         return grid[x,y];
     }
     public Quad QuadFromNode(Node node) {
-        Vector2 coordinate = new Vector2(node.gridX,node.gridY);
-        if(findPathDict.ContainsKey(coordinate)) {
+        Vector2 coordinate = CurrentMap.AStarCoordinateToCoordinate(new Vector2(node.gridX,node.gridY));
+        if(findPathDict.ContainsKey(coordinate)) {//这样不对,因为字典里面是地图的坐标而不是寻路的坐标,所以需要转化
             return findPathDict[coordinate];
         }else {
             UnityEngine.Debug.LogError("cannot find this quad");
@@ -150,17 +158,20 @@ public class QuadsManager : SingletonManager<QuadsManager> {
         }
         return neighbors;
     }
-    private void FindPath(Vector3 startPos, Vector3 targetPos) { //A star algorhithm
+    private IEnumerator FindPath(Vector3 startPos, Vector3 targetPos) { //A star algorhithm
+        
         Stopwatch sw = new Stopwatch();
         sw.Start();
+        Vector3[] waypoints = new Vector3[0];
+        bool pathSuccess = false;
         Node startNode = NodeFromWorldPoint(startPos);
         Node targetNode = NodeFromWorldPoint(targetPos);
-
+        if(!startNode.walkable || !targetNode.walkable) yield return null;
         Heap<Node> openSet = new Heap<Node>(MaxSize);
         //List<Node> openSet = new List<Node>();
         HashSet<Node> closedSet = new HashSet<Node>();
         openSet.Add(startNode);
-
+        
         while(openSet.Count > 0) {
             Node currentNode = openSet.RemoveFirst();//heap!
             // for (int i = 1; i < openSet.Count; i++) {
@@ -173,8 +184,9 @@ public class QuadsManager : SingletonManager<QuadsManager> {
             if(currentNode == targetNode) {
                 sw.Stop();
                 UnityEngine.Debug.Log("Path found: " + sw.ElapsedMilliseconds);
-                RetracePath(startNode,targetNode);
-                return;
+                pathSuccess = true;
+                
+                break;
             }
             foreach (var item in GetNeighbors(currentNode)) {
                 if(!item.walkable || closedSet.Contains(item)) {
@@ -192,21 +204,46 @@ public class QuadsManager : SingletonManager<QuadsManager> {
                 }
             }
         }
+        yield return null;//这里循环结束了,那么要么找到了路,pathSuccess是true,要么找失败了,pathSuccess是false
+        if(pathSuccess) {
+            waypoints = RetracePath(startNode,targetNode);
+        }
+        pathRequestManager.FinishedProcessingPath(waypoints, pathSuccess);
     }
-    void RetracePath(Node startNode, Node endNode) {
+    public void StartFindPath(Vector3 startPos,Vector3 targetPos) {
+        StartCoroutine(FindPath(startPos,targetPos));
+    }
+    Vector3[] RetracePath(Node startNode, Node endNode) {
         List<Node> path = new List<Node>();
         Node currentNode = endNode;
-        while (currentNode != startNode) {
+        while (currentNode != startNode) {//如果起点和终点一样,那么path就是空的
             path.Add(currentNode);
             currentNode = currentNode.parent;
         }
-        path.Reverse();
+        Vector3[] waypoints = SimplifyPath(path);
+        Array.Reverse(waypoints);
+        //目前下面执行的是显示找到的道路,之后会被更改
         foreach (var item in path) {
             UnityEngine.Debug.Log(new Vector2(item.gridX,item.gridY));
             if(QuadFromNode(item).TryGetComponent<Quad>(out Quad quad)) {
                quad.EnableEmissionShader(true);
             } 
         }
+        return waypoints;
+    }
+    Vector3[] SimplifyPath(List<Node> path) {//让node转化为道路的具体坐标点,其中相同方向的点会被忽略
+        List<Vector3> waypoints = new List<Vector3>();
+        Vector2 directionOld = Vector2.zero;
+
+        for (int i = 1; i < path.Count; i++) {//如果起点终点一样,path为空,根本不会进循环,path.count为1就是只有两个点,也不会进循环.
+            Vector2 directionNew = new Vector2(path[i-1].gridX - path[i].gridX,path[i-1].gridY - path[i].gridY);//之前node的寻路系统坐标和之后node
+            if(directionNew != directionOld) {
+                waypoints.Add(path[i].worldPosition);
+            }
+            directionOld = directionNew;
+        }
+        return waypoints.ToArray();//如果path有两个点以上,才会进循环,waypoints才不是空的.其实没有问题,因为一个点说明目标就在旁边,说明已经找到路了
+        //使用的时候需要注意判断返回的这个Vector3[]里面有没有东西就好了!
     }
     int GetDistance(Node nodeA,Node nodeB) {
         int disX = Mathf.Abs(nodeA.gridX - nodeB.gridX);
