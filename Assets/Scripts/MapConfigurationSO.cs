@@ -34,4 +34,19 @@ public class MapConfigurationSO : ScriptableObject {
         return result;
     }
 
+    public Vector2 AStarCoordinateToCoordinate(Vector2 co) {
+        //这个方法本质上要把和寻路相关的坐标转为deploy和enemy区域的坐标,寻路是从(0,0)开始,寻路的第一格是deploy的第一格,因此这里(x,y+1)
+        //这里的写法只能应用于目前的地图,需要一些更高级的做法.
+        return new Vector2(co.x,co.y+1);
+    }
+
+    public Vector2 GetOffset() {
+        Vector2 res = new Vector2();
+        if(DeployQuadCoordinates.Count != 0) {
+            res = new Vector2(DeployQuadCoordinates[0].x * ScaleRatio,DeployQuadCoordinates[0].y * ScaleRatio);
+            //友方第一个坐标和(0,0)在世界坐标中的差值就是寻路坐标原点和所有点坐标原点的偏移量
+            //这里是计算实际距离的偏移量,和上一个方法中计算坐标的偏移量是不一样的
+        }
+        return res;
+    }
 }
