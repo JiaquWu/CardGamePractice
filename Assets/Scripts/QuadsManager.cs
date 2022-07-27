@@ -58,8 +58,6 @@ public class QuadsManager : SingletonManager<QuadsManager> {
     Vector2 gridWorldSize;//和寻路有关的区域面积大小
     float nodeRadius;
     Node[,] grid;//所有跟寻路有关的node,(0,0)是地图里面的(1,0),因为不包括preparation,这个转换是地图自己做
-    public Transform start;
-    public Transform end;
     PathRequestManager pathRequestManager => PathRequestManager.Instance;
     MapConfigurationSO CurrentMap => MapManager.Instance.CurrentMapConfiguration;
     private void OnDrawGizmos() {
@@ -78,12 +76,6 @@ public class QuadsManager : SingletonManager<QuadsManager> {
     protected override void Init() {
         InitializeAllQuads();
         InitializeGrid();
-    }
-    private void Start() {
-        PathRequestManager.RequestPath(start.position,end.position,(pos,b)=>UnityEngine.Debug.Log("长度是" + pos.Length));
-    }
-    private void Update() {
-        
     }
 
     private void InitializeGrid() {
@@ -186,7 +178,7 @@ public class QuadsManager : SingletonManager<QuadsManager> {
                 UnityEngine.Debug.Log("Path found: " + sw.ElapsedMilliseconds);
                 pathSuccess = true;
                 
-                break;
+                break;//对于ienumerator来说,yield break = return, break只是跳出这个循环
             }
             foreach (var item in GetNeighbors(currentNode)) {
                 if(!item.walkable || closedSet.Contains(item)) {
@@ -237,8 +229,9 @@ public class QuadsManager : SingletonManager<QuadsManager> {
 
         for (int i = 1; i < path.Count; i++) {//如果起点终点一样,path为空,根本不会进循环,path.count为1就是只有两个点,也不会进循环.
             Vector2 directionNew = new Vector2(path[i-1].gridX - path[i].gridX,path[i-1].gridY - path[i].gridY);//之前node的寻路系统坐标和之后node
-            if(directionNew != directionOld) {
-                waypoints.Add(path[i].worldPosition);
+            if(directionNew != directionOld) {//第一个点会被记下来,然后到下一次改方向的时候会记下来
+                //waypoints.Add(path[i].worldPosition);//改方向之后加新的点,第一格add的点一定是终点旁边的点而不是终点,并且行径路线会出现斜线的情况
+                waypoints.Add(path[i-1].worldPosition);//如果是i-1,那也就是终点也会记下来,因为RetracePath方法中一定会add endNode,所以unit会到达终点而不是终点旁边,并且走的路线更直,而不是斜线
             }
             directionOld = directionNew;
         }
