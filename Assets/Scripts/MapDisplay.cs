@@ -4,22 +4,14 @@ using UnityEngine;
 
 public class MapDisplay : MonoBehaviour {
     public Renderer textureRender;
-    public void DrawNoiseMap(float[,] noiseMap) {
-        int width = noiseMap.GetLength(0);//0就是第一个维度,就是宽
-        int height = noiseMap.GetLength(1);
-        
-        Texture2D texture = new Texture2D(width,height);
-        
-        Color[] colorMap = new Color[width*height];
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                colorMap[y*width+x] = Color.Lerp(Color.black,Color.white,noiseMap[x,y]);//y*width+x y是高,所以先确定在第几行
-            }
-        }
-        texture.SetPixels(colorMap);
-        texture.Apply();
-
+    public MeshFilter meshFilter;
+    public MeshRenderer meshRenderer;
+    public void DrawTexture(Texture2D texture) {
         textureRender.sharedMaterial.mainTexture = texture;
-        textureRender.transform.localScale = new Vector3(width,1,height);
+        textureRender.transform.localScale = new Vector3(texture.width,1,texture.height);
+    }
+    public void DrawMesh(MeshData meshData,Texture2D texture) {
+        meshFilter.sharedMesh = meshData.CreateMesh();//用传来的meshData数据创建一个新的mesh,shared是因为可以在editor修改
+        meshRenderer.sharedMaterial.mainTexture = texture;//把材质替换成传来的计算好的材质， 
     }
 }
