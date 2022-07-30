@@ -192,6 +192,8 @@ public class QuadsManager : SingletonManager<QuadsManager> {
                     item.parent = currentNode;
                     if(!openSet.Contains(item)) {
                         openSet.Add(item);
+                    }else {
+                        openSet.UpdateItem(item);
                     }
                 }
             }
