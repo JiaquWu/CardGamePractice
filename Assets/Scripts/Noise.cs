@@ -25,8 +25,12 @@ public static class Noise {
                 float frequency = 1;
                 float noiseHeight = 0;
                 for (int i = 0; i < octaves; i++) {
-                    float sampleX = (x-halfWidth) / scale * frequency + octaveOffsets[i].x;//乘以频率,这样两个值之间的差距会更大,更不连贯,(x-halfWidth)是因为全体向左下角偏移一半,这样就能缩放到中心
-                    float sampleY = (y-halfHeight) / scale * frequency + octaveOffsets[i].y;//这里没搞懂为什么x-halfwidth就行了
+                    float sampleX = (x-halfWidth) / scale * frequency + octaveOffsets[i].x;//乘以频率,这样两个值之间的差距会更大,更不连贯,
+                    float sampleY = (y-halfHeight) / scale * frequency + octaveOffsets[i].y;//y-halfHeight能让一半的值是负数，
+                    //对于正数来说，scale越大，x/scale值越小，但对于负数来说，scale越大，x/scale值越大，
+                    //因此这样以中心为原点，建立坐标轴，四个象限的点会以不同比例(x正比，y正比；x反比，y反比；x正比，y反比；x反比，y正比)缩放
+                    //从而使视觉效果上实现中心缩放
+                    //另外，从结果上来看这个图的坐标轴和一般的是相反的，如果旋转180度坐标轴就是正的，很奇怪，先不管了
 
                     float perlinValue = Mathf.PerlinNoise(sampleX,sampleY) * 2 -1;//原本返回随机0到1,这样就会随机-1到1
                     noiseHeight += perlinValue * amplitude;//由于amplitude会越来越小,noiseHeight的变化会越来越小
