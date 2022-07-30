@@ -5,7 +5,7 @@ using UnityEngine;
 public class LandGenerator : MonoBehaviour {
     public enum DrawMode {NoiseMap, colorMap,Mesh}
     public DrawMode drawMode;
-    const int mapChunkSize = 241;
+    public const int mapChunkSize = 241;
     [Range(0,6)]
     public int levelOfDetail;//2,4,6,8,10,12,这些都能被241-1整除
     public float noiseScale;
