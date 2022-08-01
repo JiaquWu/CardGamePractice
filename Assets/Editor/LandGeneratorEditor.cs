@@ -8,11 +8,11 @@ public class LandGeneratorEditor : Editor {
         LandGenerator generator = (LandGenerator)target;
         if(DrawDefaultInspector()) {
             if(generator.autoUpdate) {
-                generator.GenerateMap();
+                generator.DrawMapInEditor();
             }
         }
         if(GUILayout.Button("Generate")) {
-            generator.GenerateMap();
+            generator.DrawMapInEditor();
         }
 
     }
