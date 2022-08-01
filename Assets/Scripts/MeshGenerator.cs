@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public static class MeshGenerator {
-    public static MeshData GenerateTerrainMesh(float[,] heightMap, float heightMultiplier,AnimationCurve heightCurve,int levelOfDetail) {//生成新的meshData，里面包括生成mesh所需的顶点，三角，UV
+    public static MeshData GenerateTerrainMesh(float[,] heightMap, float heightMultiplier,AnimationCurve _heightCurve,int levelOfDetail) {//生成新的meshData，里面包括生成mesh所需的顶点，三角，UV
+        AnimationCurve heightCurve = new AnimationCurve(_heightCurve.keys);
         int width = heightMap.GetLength(0);
         int height = heightMap.GetLength(1);
         float topLeftX = (width-1)/-2f;//比如横向总共三个点，那么第二点为中心点，第一点的横坐标就是-1
