@@ -23,23 +23,24 @@ public class EndlessTerrain : MonoBehaviour {
     }
     void UpdateVisibleChunks() {
         for (int i = 0; i < terrainChunksVisbleLastUpdate.Count; i++) {
-            terrainChunksVisbleLastUpdate[i].SetVisible(false);
+            terrainChunksVisbleLastUpdate[i].SetVisible(false);//先把上一帧加进来的所有都关掉,下面的方法再重新开一次
         }
         terrainChunksVisbleLastUpdate.Clear();
 
         int currentChunkCoordX = Mathf.RoundToInt(viewerPosition.x / chunkSize);//chunk的坐标,(0,1)这种
-        int currentChunkCoordY = Mathf.RoundToInt(viewerPosition.y / chunkSize);
+        int currentChunkCoordY = Mathf.RoundToInt(viewerPosition.y / chunkSize);//比如chunksize是240,position是260,那么坐标就是1,因为坐标从(0,0)开始
         
-        for (int yOffset = -chunksVisibleInViewDist; yOffset <= chunksVisibleInViewDist; yOffset++) {
-            for (int xOffset = -chunksVisibleInViewDist; xOffset <= chunksVisibleInViewDist; xOffset++) {
+        for (int yOffset = -chunksVisibleInViewDist; yOffset <= chunksVisibleInViewDist; yOffset++) {//从负数开始是因为角色前后左右
+            for (int xOffset = -chunksVisibleInViewDist; xOffset <= chunksVisibleInViewDist; xOffset++) {//offset就是说人不管在哪里,我前后左右若干格都应该能看到
                 Vector2 viewedChunkCoord = new Vector2(currentChunkCoordX + xOffset, currentChunkCoordY + yOffset);
-                if(terrainChunkDictionary.ContainsKey(viewedChunkCoord)) {
-                    terrainChunkDictionary[viewedChunkCoord].UpdateTerrainChunk();
+                if(terrainChunkDictionary.ContainsKey(viewedChunkCoord)) {//说明这个坐标来过
+                    terrainChunkDictionary[viewedChunkCoord].UpdateTerrainChunk();//
                     if(terrainChunkDictionary[viewedChunkCoord].IsVisible()) {
                        terrainChunksVisbleLastUpdate.Add(terrainChunkDictionary[viewedChunkCoord]);
                     }
                 }else {
-                    terrainChunkDictionary.Add(viewedChunkCoord,new TerrianChunk(viewedChunkCoord,chunkSize,transform,mapMaterial));
+                    terrainChunkDictionary.Add(viewedChunkCoord,new TerrianChunk(viewedChunkCoord,chunkSize,transform,mapMaterial));//因为在update调用,
+                    //所以这一帧add进去了,下一帧会updateterrainchunk
                 }
             }
         }
