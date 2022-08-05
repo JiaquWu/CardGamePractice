@@ -9,7 +9,7 @@ public class LandGenerator : MonoBehaviour {
     public DrawMode drawMode;
     public const int mapChunkSize = 241;
     [Range(0,6)]
-    public int levelOfDetail;//2,4,6,8,10,12,这些都能被241-1整除
+    public int editorPreviewLOD;//2,4,6,8,10,12,这些都能被241-1整除
     public float noiseScale;
 
     public int octaves;
@@ -33,7 +33,7 @@ public class LandGenerator : MonoBehaviour {
         }else if(drawMode == DrawMode.colorMap) {//如果要加颜色，那么就是这个脚本开放变量中设置的颜色+
             display.DrawTexture(TextureGenerator.TextureFromColorMap(mapData.colorMap,mapChunkSize,mapChunkSize));
         }else if (drawMode == DrawMode.Mesh) {//如果是要生成mesh
-            display.DrawMesh(MeshGenerator.GenerateTerrainMesh(mapData.heightMap,meshHeightMultiplier,meishHeightCurve,levelOfDetail),TextureGenerator.TextureFromColorMap(mapData.colorMap,mapChunkSize,mapChunkSize));
+            display.DrawMesh(MeshGenerator.GenerateTerrainMesh(mapData.heightMap,meshHeightMultiplier,meishHeightCurve,editorPreviewLOD),TextureGenerator.TextureFromColorMap(mapData.colorMap,mapChunkSize,mapChunkSize));
         }
     }
 
@@ -50,14 +50,14 @@ public class LandGenerator : MonoBehaviour {
         }
     }
 
-    public void RequestMeshData(MapData mapData,Action<MeshData> callback) {//从mapdata得到meshdata
+    public void RequestMeshData(MapData mapData,int lod, Action<MeshData> callback) {//从mapdata得到meshdata
         ThreadStart threadStart = delegate {
-            MeshDataThread(mapData,callback);
+            MeshDataThread(mapData,lod,callback);
         };
         new Thread(threadStart).Start();
     }
-    void MeshDataThread(MapData mapData,Action<MeshData> callback) {
-        MeshData meshData = MeshGenerator.GenerateTerrainMesh(mapData.heightMap,meshHeightMultiplier,meishHeightCurve,levelOfDetail);
+    void MeshDataThread(MapData mapData,int lod,Action<MeshData> callback) {
+        MeshData meshData = MeshGenerator.GenerateTerrainMesh(mapData.heightMap,meshHeightMultiplier,meishHeightCurve,lod);
         lock(meshDataThreadInfoQueue) {
             meshDataThreadInfoQueue.Enqueue(new MapThreadInfo<MeshData>(callback,meshData));
         }
