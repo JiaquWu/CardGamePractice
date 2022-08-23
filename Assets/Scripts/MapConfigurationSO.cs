@@ -8,10 +8,10 @@ public class MapConfigurationSO : ScriptableObject {
     private float scaleRatio;//坐标和实际坐标系的比率
     public float ScaleRatio => scaleRatio;
     [SerializeField]
-    private int quadSizeX;//横向地图格数
+    private int quadSizeX;//横向地图格数,寻路相关
     public  int QuadSizeX => quadSizeX;
     [SerializeField]
-    private int quadSizeY;//竖向地图格数
+    private int quadSizeY;//竖向地图格数,寻路相关
     public int QuadSizeY => quadSizeY;
     [SerializeField]
     private Vector3 originPoint;//坐标轴原点,这里默认坐标轴的x轴和unity坐标x轴对应,y轴和unity坐标z轴对应,左下角顶点
