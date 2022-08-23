@@ -12165,9 +12165,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d0c111f6e9e70ac48b39d6560eaa8307, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  championName: 
+  isAllyChampion: 0
   currentChampionStats: {fileID: 11400000, guid: fd89026682560014496353253e6774ac,
     type: 2}
   championAbility: {fileID: 11400000, guid: 1a4557ab84823bc458331b14c1ed420f, type: 2}
+--- !u!64 &1842860386
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1842860382}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_Enabled: 1
+  serializedVersion: 4
+  m_Convex: 1
+  m_CookingOptions: 30
+  m_Mesh: {fileID: -4407679230795050791, guid: 7013d801542c16245bb32fd852f87b7a, type: 3}
 --- !u!1 &1857541924
 GameObject:
   m_ObjectHideFlags: 0
