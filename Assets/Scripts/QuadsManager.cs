@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -56,10 +57,12 @@ public class QuadsManager : SingletonManager<QuadsManager> {
     private int quadSizeY;
     public int MaxSize => quadSizeX * quadSizeY;
     Vector2 gridWorldSize;//和寻路有关的区域面积大小
+    Bounds bounds;
     float nodeRadius;
     Node[,] grid;//所有跟寻路有关的node,(0,0)是地图里面的(1,0),因为不包括preparation,这个转换是地图自己做
     PathRequestManager pathRequestManager => PathRequestManager.Instance;
-    MapConfigurationSO CurrentMap => MapManager.Instance.CurrentMapConfiguration;
+    public MapConfigurationSO CurrentMap => MapManager.Instance.CurrentMapConfiguration;
+    public float unitScaleRatio => CurrentMap.ScaleRatio;//每格长度
     private void OnDrawGizmos() {
     }
     public void DeleteAllQuads() {
@@ -84,6 +87,7 @@ public class QuadsManager : SingletonManager<QuadsManager> {
         quadSizeY = map.QuadSizeY;
         grid = new Node[quadSizeX,quadSizeY];
         gridWorldSize = new Vector2(quadSizeX * map.ScaleRatio,quadSizeY * map.ScaleRatio);
+        //bounds = new Bounds((map.OriginPoint + new Vector3(gridWorldSize.x,0,gridWorldSize.y)/2),new Vector3(gridWorldSize.x,2,gridWorldSize.y));//原点加上这片的中心点,2随便给的
         for (int x = 0; x < quadSizeX; x++) {
             for (int y = 0; y < quadSizeY; y++) {
                 Vector2 coordinate = map.AStarCoordinateToCoordinate(new Vector2(x,y));
@@ -106,7 +110,7 @@ public class QuadsManager : SingletonManager<QuadsManager> {
         int count = quadsParent.childCount;
         for (int i = 0; i < count; i++) {
            if(quadsParent.GetChild(i).TryGetComponent<Quad>(out Quad quad)) {
-               quad.InitializeNode(true,quadsParent.GetChild(i).position,(int)quadCoordinates[i].x,(int)quadCoordinates[i].y);
+               quad.InitializeNode(true,quadsParent.GetChild(i).position,(int)quadCoordinates[i].x,(int)quadCoordinates[i].y,quad);
                //quad.node = new Node(true,quadsParent.GetChild(i).position,(int)quadCoordinates[i].x,(int)quadCoordinates[i].y);
                //因为生成的时候是按quadCoordinates的顺序生成,因此这里也是这个顺序
                dict.Add(quadCoordinates[i],quad);//所以字典里面的坐标并不是寻路的坐标,而是地图的坐标!
@@ -115,7 +119,26 @@ public class QuadsManager : SingletonManager<QuadsManager> {
            }
         } 
     }
+    public Quad GetQuadByPosition(Vector3 worldPosition) {
+        //应该有一种方法来判断点在哪片区域
+        for (int i = 0; i < preparationQuadsDict.Count; i++) {
+            Vector3 nodePos = preparationQuadsDict.ElementAt(i).Value.node.worldPosition;
+            if((nodePos.x - unitScaleRatio / 2 <= worldPosition.x && worldPosition.x <= nodePos.x + unitScaleRatio / 2)
+            && (nodePos.z - unitScaleRatio / 2 <= worldPosition.z && worldPosition.z <= nodePos.z + unitScaleRatio / 2)) {
+                return preparationQuadsDict.ElementAt(i).Value.node.attachedQuad;
+            }
+        }
+        for (int i = 0; i < findPathDict.Count; i++) {
+            Vector3 nodePos = findPathDict.ElementAt(i).Value.node.worldPosition;
+            if((nodePos.x - unitScaleRatio / 2 <= worldPosition.x && worldPosition.x <= nodePos.x + unitScaleRatio / 2)
+            && (nodePos.z - unitScaleRatio / 2 <= worldPosition.z && worldPosition.z <= nodePos.z + unitScaleRatio / 2)) {
+                return findPathDict.ElementAt(i).Value.node.attachedQuad;
+            }
+        }
+        return null;
+    }
     public Node NodeFromWorldPoint(Vector3 worldPosition) {
+        //if(!bounds.Contains(worldPosition)) return null;
         MapConfigurationSO map = MapManager.Instance.CurrentMapConfiguration;
         Vector2 offset = map.GetOffset();//寻路的原点和所有点坐标原点的偏移量
         float percentX = (worldPosition.x - (MapManager.Instance.CurrentMapConfiguration.OriginPoint.x + offset.x)) / gridWorldSize.x;
@@ -123,7 +146,7 @@ public class QuadsManager : SingletonManager<QuadsManager> {
         percentY = Mathf.Clamp01(percentY);
         int x = Mathf.CeilToInt(quadSizeX * percentX) - 1;//这里是推算出来的要ceil,先算出百分比,ceil是因为最大7.5,7.0到7.5都是第八格,然后因为index要-1
         int y = Mathf.CeilToInt(quadSizeY * percentY) - 1;//同理,因为这里quadSizeY是8,所以一样的
-        UnityEngine.Debug.Log("坐标是: " + new Vector2(x,y));
+        //UnityEngine.Debug.Log("坐标是: " + new Vector2(x,y));
         return grid[x,y];
     }
     public Quad QuadFromNode(Node node) {
