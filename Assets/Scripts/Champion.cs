@@ -36,7 +36,7 @@ public class Champion : MonoBehaviour {//棋子类,
     public ChampionAbility championAbility;
 
     protected ChampionState currentChampionState;
-
+    Quad lastQuad = null;
     private void OnGUI() {
         if(GUILayout.Button("cast ability")) {
             Debug.Log(currentChampionStats.attackDamage);
@@ -49,8 +49,17 @@ public class Champion : MonoBehaviour {//棋子类,
         // Debug.Log(Input.mousePosition);
         // Debug.Log(Camera.main.ScreenToWorldPoint(Input.mousePosition));
         Vector3 screenPos = Camera.main.WorldToScreenPoint(transform.position);
-        Debug.Log(screenPos);
-        transform.position = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x,Input.mousePosition.y,screenPos.z));
+        Vector3 temp = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x,Input.mousePosition.y,screenPos.z));
+        temp.y = QuadsManager.Instance.CurrentMap.OriginPoint.y;
+        transform.position = temp;
+        //还要通过quadmanager知道当前对应的quad,调用高亮和退出的方法
+        Quad currentQuad = QuadsManager.Instance.GetQuadByPosition(transform.position);
+        if(currentQuad == null) return;
+        if(lastQuad != null && lastQuad != currentQuad) {//说明进入了新的quad
+            lastQuad.OnChampionExit();
+        }
+        currentQuad.OnChampionEnter();
+        lastQuad = currentQuad;
     }
     public void InitFSM() {
         championStateMachine.AddState(ChampionState.PREPARE,new ChampionPrepare(false));
