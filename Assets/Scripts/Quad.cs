@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 
 public class Quad : MonoBehaviour {
+    private bool isChampionEnteredOnMouse;//鼠标带着英雄进来了
     public Node node;
     private string shaderTime = "Time_Current";
     private GameObject emissionShader;
@@ -22,9 +23,23 @@ public class Quad : MonoBehaviour {
         EnableEmissionShader(false);
     }
     public void OnMouseEnter() {
+        if(InputManager.Instance.IsLeftMouseButtonPressed) return;//只有鼠标左键没按的时候才会有用
         EnableEmissionShader(true);
     }
     public void OnMouseExit() {
+        if(InputManager.Instance.IsLeftMouseButtonPressed) return;
+        EnableEmissionShader(false);
+    }
+    public void OnChampionEnter() {//玩家拖着英雄到格子上面的时候
+        if(isChampionEnteredOnMouse) return;//如果已经在上面了就不用执行后面的了
+        isChampionEnteredOnMouse = true;
+        Debug.Log("OnChampionEnter");
+        EnableEmissionShader(true);
+    }
+
+    public void OnChampionExit() {
+        isChampionEnteredOnMouse = false;
+        Debug.Log("OnChampionExit");
         EnableEmissionShader(false);
     }
     public void EnableEmissionShader(bool enable) {
@@ -35,7 +50,7 @@ public class Quad : MonoBehaviour {
             EmissionShader.SetActive(false);
         }
     }
-    public virtual void InitializeNode(bool _walkable, Vector3 _worldPos, int _gridX, int _gridY) {
+    public virtual void InitializeNode(bool _walkable, Vector3 _worldPos, int _gridX, int _gridY,Quad attachedQuad) {
         
     }
 }
@@ -49,13 +64,18 @@ public class Node : IHeapItem<Node> {//a星算法相关
     public int hCost;
     int heapIndex;
     public Node parent;
-    public Node(bool _walkable, Vector3 _worldPos, int _gridX, int _gridY) {
+    public Quad attachedQuad;//这样node就知道自己在哪个quad上面
+    public Node(bool _walkable, Vector3 _worldPos, int _gridX, int _gridY,Quad _attachedQuad) {
         walkable = _walkable;
         worldPosition = _worldPos;
         gridX = _gridX;
         gridY = _gridY;
+        attachedQuad = _attachedQuad;
     }
-
+    public Node(Vector3 _worldPos,Quad _attachedQuad) {//不参与寻路的node
+        worldPosition = _worldPos;
+        attachedQuad = _attachedQuad;
+    }
     public int fCost => gCost +hCost;
 
     public int HeapIndex {
