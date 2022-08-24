@@ -22,14 +22,14 @@ public class Quad : MonoBehaviour {
     protected void Start() {
         EnableEmissionShader(false);
     }
-    public void OnMouseEnter() {
+    public virtual void OnMouseEnter() {
         if(InputManager.Instance.IsLeftMouseButtonPressed) return;//只有鼠标左键没按的时候才会有用
         EnableEmissionShader(true);
     }
-    private void OnMouseDown() {
+    public virtual void OnMouseDown() {
         EnableEmissionShader(false);
     }
-    public void OnMouseExit() {
+    public virtual void OnMouseExit() {
         if(InputManager.Instance.IsLeftMouseButtonPressed) return;
         EnableEmissionShader(false);
     }
