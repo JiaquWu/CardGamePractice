@@ -128,11 +128,11 @@ public class QuadsManager : SingletonManager<QuadsManager> {
                 return preparationQuadsDict.ElementAt(i).Value.node.attachedQuad;
             }
         }
-        for (int i = 0; i < findPathDict.Count; i++) {
-            Vector3 nodePos = findPathDict.ElementAt(i).Value.node.worldPosition;
+        for (int i = 0; i < deployQuadsDict.Count; i++) {
+            Vector3 nodePos = deployQuadsDict.ElementAt(i).Value.node.worldPosition;
             if((nodePos.x - unitScaleRatio / 2 <= worldPosition.x && worldPosition.x <= nodePos.x + unitScaleRatio / 2)
             && (nodePos.z - unitScaleRatio / 2 <= worldPosition.z && worldPosition.z <= nodePos.z + unitScaleRatio / 2)) {
-                return findPathDict.ElementAt(i).Value.node.attachedQuad;
+                return deployQuadsDict.ElementAt(i).Value.node.attachedQuad;
             }
         }
         return null;
