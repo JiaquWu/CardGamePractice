@@ -20,7 +20,7 @@ public class Champion : MonoBehaviour {//棋子类,
     public string ChampionName => championName;
     [SerializeField]
     private bool isAllyChampion;//true就是友方
-    private StateMachine<ChampionState> championStateMachine;
+    private StateMachine<ChampionState> championStateMachine = new StateMachine<ChampionState>();
     protected Animator animator;
     protected Animator Animator {
         get{
@@ -37,6 +37,13 @@ public class Champion : MonoBehaviour {//棋子类,
 
     protected ChampionState currentChampionState;
     Quad lastQuad = null;
+    Quad currentQuad = null;
+    private void Start() {
+        InitFSM();//不应该在这里执行,only for testing
+    }
+    private void Update() {
+        championStateMachine.OnLogic();
+    }
     private void OnGUI() {
         if(GUILayout.Button("cast ability")) {
             Debug.Log(currentChampionStats.attackDamage);
@@ -53,13 +60,29 @@ public class Champion : MonoBehaviour {//棋子类,
         temp.y = QuadsManager.Instance.CurrentMap.OriginPoint.y;
         transform.position = temp;
         //还要通过quadmanager知道当前对应的quad,调用高亮和退出的方法
-        Quad currentQuad = QuadsManager.Instance.GetQuadByPosition(transform.position);
-        if(currentQuad == null) return;
+        currentQuad = QuadsManager.Instance.GetQuadByPosition(transform.position);
+        if(currentQuad == null) {
+            //应该让英雄停留在上个格子
+            transform.position = lastQuad.node.worldPosition;
+            return;
+        }
         if(lastQuad != null && lastQuad != currentQuad) {//说明进入了新的quad
             lastQuad.OnChampionExit();
         }
         currentQuad.OnChampionEnter();
         lastQuad = currentQuad;
+    }
+    private void OnMouseUp() {
+        if(lastQuad != null) {
+            transform.position = lastQuad.node.worldPosition;
+            lastQuad.OnChampionStay();
+            if(lastQuad is DeployQuad) {
+                championStateMachine.Trigger("OnDeployQuad");
+            }else if(lastQuad is PreparationQuad){     
+                championStateMachine.Trigger("OnPreparationQuad");
+            }
+        }
+        
     }
     public void InitFSM() {
         championStateMachine.AddState(ChampionState.PREPARE,new ChampionPrepare(false));
@@ -69,8 +92,12 @@ public class Champion : MonoBehaviour {//棋子类,
         championStateMachine.AddState(ChampionState.DEAD,new ChampionDead(false));
 
         championStateMachine.AddTriggerTransition("BattleStart",ChampionState.IDLE,ChampionState.WALK);//战斗开始,开始行动
+        championStateMachine.AddTriggerTransition("OnPreparationQuad",ChampionState.IDLE,ChampionState.PREPARE);
+        championStateMachine.AddTriggerTransition("OnDeployQuad",ChampionState.PREPARE,ChampionState.IDLE);
 
         championStateMachine.AddTriggerTransitionFromAny("Dead",ChampionState.DEAD);//随时可以会死,prepare虽然不会,但是不触发就好了
+
+        championStateMachine.Init();
     }
     public void OnBattleStart() {//需要找到一种合适的方式触发这件事情
         championStateMachine.Trigger("BattleStart");
@@ -100,13 +127,13 @@ public class ChampionIdle : StateBase<ChampionState> {
 
     }
     public override void OnEnter() {
-        
+        Debug.Log("DeployQuad");
     }
     public override void OnLogic() {
-        
+        Debug.Log("DeployQuadOnLogic");
     }
     public override void OnExit() {
-        
+        Debug.Log("DeployQuadExit");
     }
 }
 
@@ -115,13 +142,13 @@ public class ChampionPrepare: StateBase<ChampionState> {
 
     }
     public override void OnEnter() {
-        
+        Debug.Log("Prepare");
     }
     public override void OnLogic() {
-        
+        Debug.Log("PrepareOnLogic");
     }
     public override void OnExit() {
-        
+        Debug.Log("PrepareExit");
     }
 }
 public class ChampionWalk: StateBase<ChampionState> {
