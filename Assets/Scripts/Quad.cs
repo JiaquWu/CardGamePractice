@@ -26,6 +26,9 @@ public class Quad : MonoBehaviour {
         if(InputManager.Instance.IsLeftMouseButtonPressed) return;//只有鼠标左键没按的时候才会有用
         EnableEmissionShader(true);
     }
+    private void OnMouseDown() {
+        EnableEmissionShader(false);
+    }
     public void OnMouseExit() {
         if(InputManager.Instance.IsLeftMouseButtonPressed) return;
         EnableEmissionShader(false);
@@ -33,13 +36,15 @@ public class Quad : MonoBehaviour {
     public void OnChampionEnter() {//玩家拖着英雄到格子上面的时候
         if(isChampionEnteredOnMouse) return;//如果已经在上面了就不用执行后面的了
         isChampionEnteredOnMouse = true;
-        Debug.Log("OnChampionEnter");
         EnableEmissionShader(true);
     }
 
     public void OnChampionExit() {
         isChampionEnteredOnMouse = false;
-        Debug.Log("OnChampionExit");
+        EnableEmissionShader(false);
+    }
+    public void OnChampionStay() {
+        //鼠标松开,让英雄站在上面
         EnableEmissionShader(false);
     }
     public void EnableEmissionShader(bool enable) {
