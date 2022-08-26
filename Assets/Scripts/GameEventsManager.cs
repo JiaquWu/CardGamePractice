@@ -7,7 +7,12 @@ public enum GameEventTypeGameObject {
 
 }
 public enum GameEventTypeVoid {
-
+    ENTER_INIT_STATE,
+    ENTER_PLAY_STATE,
+    ENTER_IDLE_STATE,
+    ENTER_DEPLOY_STATE,
+    ENTER_COMBAT_STATE,
+    ENETR_BONUS_STATE
 }
 public enum GameEventTypeInt {
 
