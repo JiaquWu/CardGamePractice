@@ -38,10 +38,9 @@ public class Champion : MonoBehaviour {//棋子类,
     protected ChampionState currentChampionState;
     Quad lastQuad = null;
     Quad currentQuad = null;
-    private void Start() {
-        InitFSM();//不应该在这里执行,only for testing
-    }
+
     private void Update() {
+        if(championStateMachine == null) //for testing
         championStateMachine.OnLogic();
     }
     private void OnGUI() {
@@ -51,6 +50,19 @@ public class Champion : MonoBehaviour {//棋子类,
             traits[0].ActivateTrait(5,this);
             Debug.Log(currentChampionStats.attackDamage);
         }
+    }
+    public void OnDeploy() {
+        //被部署到备战席的时候应该调用一些方法
+        InitFSM();
+        RegisterThisChampion();
+        GameEventsManager.StartListening(GameEventTypeVoid.ENTER_DEPLOY_STATE,OnEnterDeployState);
+        GameEventsManager.StartListening(GameEventTypeVoid.ENTER_COMBAT_STATE,OnEnterCombatState);
+        GameEventsManager.StartListening(GameEventTypeVoid.ENETR_BONUS_STATE,OnEnterBonusState);
+    }
+    public void OnDisappear() {//卖掉或者升级会触发的函数,主要是取消事件监听
+        GameEventsManager.StopListening(GameEventTypeVoid.ENTER_DEPLOY_STATE,OnEnterDeployState);
+        GameEventsManager.StopListening(GameEventTypeVoid.ENTER_COMBAT_STATE,OnEnterCombatState);
+        GameEventsManager.StopListening(GameEventTypeVoid.ENETR_BONUS_STATE,OnEnterBonusState);
     }
     private void OnMouseDrag() {
         // Debug.Log(Input.mousePosition);
@@ -99,8 +111,14 @@ public class Champion : MonoBehaviour {//棋子类,
 
         championStateMachine.Init();
     }
-    public void OnBattleStart() {//需要找到一种合适的方式触发这件事情
+    public void OnEnterDeployState(GameEventTypeVoid ev) {
+        
+    }
+    public void OnEnterCombatState(GameEventTypeVoid ev) {
         championStateMachine.Trigger("BattleStart");
+    }
+    public void OnEnterBonusState(GameEventTypeVoid ev) {
+        
     }
     //目前先把空留着,不具体实现
     //应该有不同的羁绊效果的方法,比如
