@@ -1,8 +1,9 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using FSM;
-
+[Serializable]
 public enum GameState {
     INIT,//开始游戏之前的初始化
     PLAY,//整个游戏流程
@@ -19,8 +20,15 @@ public class GameManager : SingletonManager<GameManager> {
     private StateMachine<GameState> initState;
     private StateMachine<GameState,OnPlayState,string> playState;
     private StateMachine<GameState> idleState;
-
+    private void Start() {
+        InitFSM();
+    }
+    private void Update() {
+        gameManagerStateMachine.OnLogic();
+    }
     void InitFSM() {
+        gameManagerStateMachine = new StateMachine<GameState, string>();
+
         initState = new StateMachine<GameState>();
         initState.AddState(GameState.INIT,new InitState(false,false));
 
@@ -43,6 +51,40 @@ public class GameManager : SingletonManager<GameManager> {
         gameManagerStateMachine.AddTriggerTransitionFromAny("triggerIdle",GameState.IDLE);
 
         gameManagerStateMachine.Init();
+    }
+    public void OnGameStateChange(GameStateSelector selector) {
+        switch (selector.state) {
+            case GameState.INIT:
+            gameManagerStateMachine.Trigger("triggerInit");
+            GameEventsManager.TriggerEvent(GameEventTypeVoid.ENTER_INIT_STATE);
+            break;
+            case GameState.PLAY:
+            gameManagerStateMachine.Trigger("triggerPlay");
+            GameEventsManager.TriggerEvent(GameEventTypeVoid.ENTER_PLAY_STATE);
+            break;
+            case GameState.IDLE:
+            gameManagerStateMachine.Trigger("triggerIdle");
+            GameEventsManager.TriggerEvent(GameEventTypeVoid.ENTER_IDLE_STATE);
+            break;
+        }
+    }
+    public void OnOnPlayStateChange(OnPlayStateSelector selector) {
+        //如果不在这个阶段在游戏里面是不可能进入这个阶段的
+        //if(playState.ActiveState == null) return;//这个方法要改statemachine里面activestate的代码,不去触发报错
+        switch (selector.state) {
+            case OnPlayState.DEPLOY:
+            playState.Trigger("triggerDeploy");
+            GameEventsManager.TriggerEvent(GameEventTypeVoid.ENTER_DEPLOY_STATE);
+            break;
+            case OnPlayState.COMBAT:
+            playState.Trigger("triggerCombat");
+            GameEventsManager.TriggerEvent(GameEventTypeVoid.ENTER_COMBAT_STATE);
+            break;
+            case OnPlayState.BONUS:
+            playState.Trigger("triggerBonus");
+            GameEventsManager.TriggerEvent(GameEventTypeVoid.ENETR_BONUS_STATE);
+            break;
+        }
     }
 }
 
