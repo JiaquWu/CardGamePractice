@@ -138,7 +138,10 @@ public class QuadsManager : SingletonManager<QuadsManager> {
         return null;
     }
     public Vector3 GetQuadPositionByCoordinate(Vector2 coordinate) {
-       return CurrentMap.CalculatePosition(coordinate);
+       if(CurrentMap != null) {
+          return CurrentMap.CalculatePosition(coordinate);
+       }
+       throw new NullReferenceException();
     }
     public Node NodeFromWorldPoint(Vector3 worldPosition) {
         //if(!bounds.Contains(worldPosition)) return null;
