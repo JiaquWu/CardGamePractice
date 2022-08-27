@@ -44,12 +44,12 @@ public class Champion : MonoBehaviour {//棋子类,
         championStateMachine.OnLogic();
     }
     private void OnGUI() {
-        if(GUILayout.Button("cast ability")) {
-            Debug.Log(currentChampionStats.attackDamage);
-            traits.Add(new TestTrait(ActivateTestAdditionalEffect));
-            traits[0].ActivateTrait(5,this);
-            Debug.Log(currentChampionStats.attackDamage);
-        }
+        // if(GUILayout.Button("cast ability")) {
+        //     Debug.Log(currentChampionStats.attackDamage);
+        //     traits.Add(new TestTrait(ActivateTestAdditionalEffect));
+        //     traits[0].ActivateTrait(5,this);
+        //     Debug.Log(currentChampionStats.attackDamage);
+        // }
     }
     public void OnDeploy() {
         //被部署到备战席的时候应该调用一些方法
@@ -79,15 +79,15 @@ public class Champion : MonoBehaviour {//棋子类,
             return;
         }
         if(lastQuad != null && lastQuad != currentQuad) {//说明进入了新的quad
-            lastQuad.OnChampionExit();
+            lastQuad.OnChampionExit(this);
         }
-        currentQuad.OnChampionEnter();
+        currentQuad.OnChampionEnter(this);
         lastQuad = currentQuad;
     }
     private void OnMouseUp() {
         if(lastQuad != null) {
             transform.position = lastQuad.node.worldPosition;
-            lastQuad.OnChampionStay();
+            lastQuad.OnChampionStay(this);
             if(lastQuad is DeployQuad) {
                 championStateMachine.Trigger("OnDeployQuad");
             }else if(lastQuad is PreparationQuad){     
