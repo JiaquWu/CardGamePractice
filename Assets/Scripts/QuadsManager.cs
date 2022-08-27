@@ -50,7 +50,7 @@ public class QuadsManager : SingletonManager<QuadsManager> {
     }
     
     private Dictionary<Vector2,Quad> deployQuadsDict = new Dictionary<Vector2, Quad>();
-    private Dictionary<Vector2,Quad> preparationQuadsDict = new Dictionary<Vector2, Quad>();
+    public Dictionary<Vector2,Quad> preparationQuadsDict = new Dictionary<Vector2, Quad>();
     private Dictionary<Vector2,Quad> enemyQuadsDict = new Dictionary<Vector2, Quad>();
     private Dictionary<Vector2,Quad> findPathDict = new Dictionary<Vector2, Quad>();//preparation和enemy区域的棋子和这个有关系
     private int quadSizeX;//这个是x轴总共能放多少个quad
@@ -136,6 +136,9 @@ public class QuadsManager : SingletonManager<QuadsManager> {
             }
         }
         return null;
+    }
+    public Vector3 GetQuadPositionByCoordinate(Vector2 coordinate) {
+       return CurrentMap.CalculatePosition(coordinate);
     }
     public Node NodeFromWorldPoint(Vector3 worldPosition) {
         //if(!bounds.Contains(worldPosition)) return null;
