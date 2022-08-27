@@ -5,6 +5,8 @@ using UnityEngine.EventSystems;
 
 public class Quad : MonoBehaviour {
     private bool isChampionEnteredOnMouse;//鼠标带着英雄进来了
+    private Champion championOnThisQuad;
+    public Champion ChampionOnThisQuad => championOnThisQuad;
     public Node node;
     private string shaderTime = "Time_Current";
     private GameObject emissionShader;
@@ -33,18 +35,20 @@ public class Quad : MonoBehaviour {
         if(InputManager.Instance.IsLeftMouseButtonPressed) return;
         EnableEmissionShader(false);
     }
-    public void OnChampionEnter() {//玩家拖着英雄到格子上面的时候
+    public void OnChampionEnter(Champion champion) {//玩家拖着英雄到格子上面的时候
         if(isChampionEnteredOnMouse) return;//如果已经在上面了就不用执行后面的了
         isChampionEnteredOnMouse = true;
         EnableEmissionShader(true);
     }
 
-    public void OnChampionExit() {
+    public void OnChampionExit(Champion champion) {
         isChampionEnteredOnMouse = false;
+        championOnThisQuad = null;
         EnableEmissionShader(false);
     }
-    public void OnChampionStay() {
+    public void OnChampionStay(Champion champion) {
         //鼠标松开,让英雄站在上面
+        championOnThisQuad = champion;
         EnableEmissionShader(false);
     }
     public void EnableEmissionShader(bool enable) {
