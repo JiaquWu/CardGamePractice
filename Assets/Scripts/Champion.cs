@@ -36,12 +36,14 @@ public class Champion : MonoBehaviour {//棋子类,
     public ChampionAbility championAbility;
 
     protected ChampionState currentChampionState;
-    Quad lastQuad = null;
-    Quad currentQuad = null;
+    Quad lastQuadThisChampionStand = null;//这个变量只有在鼠标松开之后变化,和换位置有关
+    Quad lastMouseHoveringQuad = null;//这个变量和currentMouseHoveringQuad在鼠标拖拽过程中会变化
+    Quad currentMouseHoveringQuad = null;
 
     private void Update() {
-        if(championStateMachine == null) //for testing
-        championStateMachine.OnLogic();
+        if(championStateMachine != null) {//for testing
+            championStateMachine.OnLogic();
+        } 
     }
     private void OnGUI() {
         // if(GUILayout.Button("cast ability")) {
@@ -51,10 +53,11 @@ public class Champion : MonoBehaviour {//棋子类,
         //     Debug.Log(currentChampionStats.attackDamage);
         // }
     }
-    public void OnDeploy() {
+    public void OnDeploy(Quad quadToStay) {
         //被部署到备战席的时候应该调用一些方法
         InitFSM();
         RegisterThisChampion();
+        OnEnterQuad(quadToStay);
         GameEventsManager.StartListening(GameEventTypeVoid.ENTER_DEPLOY_STATE,OnEnterDeployState);
         GameEventsManager.StartListening(GameEventTypeVoid.ENTER_COMBAT_STATE,OnEnterCombatState);
         GameEventsManager.StartListening(GameEventTypeVoid.ENETR_BONUS_STATE,OnEnterBonusState);
@@ -64,6 +67,27 @@ public class Champion : MonoBehaviour {//棋子类,
         GameEventsManager.StopListening(GameEventTypeVoid.ENTER_COMBAT_STATE,OnEnterCombatState);
         GameEventsManager.StopListening(GameEventTypeVoid.ENETR_BONUS_STATE,OnEnterBonusState);
     }
+    public void OnChampionSwap(Champion championOnTheTargetQuad) {
+        //championOnTheTargetQuad.gameObject.transform.position = lastMouseHoveringQuadThisChampionStand.node.worldPosition;
+        //除了改位置,还应该改一些变量啥的
+        championOnTheTargetQuad.OnEnterQuad(lastQuadThisChampionStand,true);
+    }
+    public void OnEnterQuad(Quad quad,bool isSwaping = false) {//某种方式让champion进入到一个quad,要做很多事
+        if(quad is DeployQuad) {
+            championStateMachine.Trigger("OnDeployQuad");
+        }else if(quad is PreparationQuad){     
+            championStateMachine.Trigger("OnPreparationQuad");
+        }
+        transform.position = quad.node.worldPosition;
+        if(lastQuadThisChampionStand != null && quad.ChampionOnThisQuad == null && lastQuadThisChampionStand != quad) {
+            //说明是从一个quad到另一个空quad,且不是从一个quad拿起来又放下
+            lastQuadThisChampionStand.OnChampionLeave(this);
+        }
+        quad.OnChampionStay(this,isSwaping);//先告诉quad,champion要stay
+        lastQuadThisChampionStand = quad;//再改自己的这个
+        lastMouseHoveringQuad = quad;
+        currentMouseHoveringQuad = quad;
+    }
     private void OnMouseDrag() {
         // Debug.Log(Input.mousePosition);
         // Debug.Log(Camera.main.ScreenToWorldPoint(Input.mousePosition));
@@ -72,27 +96,23 @@ public class Champion : MonoBehaviour {//棋子类,
         temp.y = QuadsManager.Instance.CurrentMap.OriginPoint.y;
         transform.position = temp;
         //还要通过quadmanager知道当前对应的quad,调用高亮和退出的方法
-        currentQuad = QuadsManager.Instance.GetQuadByPosition(transform.position);
-        if(currentQuad == null) {
+        currentMouseHoveringQuad = QuadsManager.Instance.GetQuadByPosition(transform.position);
+        if(currentMouseHoveringQuad == null && lastMouseHoveringQuad != null) {
             //应该让英雄停留在上个格子
-            transform.position = lastQuad.node.worldPosition;
+            transform.position = lastMouseHoveringQuad.node.worldPosition;
             return;
         }
-        if(lastQuad != null && lastQuad != currentQuad) {//说明进入了新的quad
-            lastQuad.OnChampionExit(this);
+        if(lastMouseHoveringQuad != null && lastMouseHoveringQuad != currentMouseHoveringQuad) {//说明进入了新的quad
+            lastMouseHoveringQuad.OnChampionExitOnMouse(this);
         }
-        currentQuad.OnChampionEnter(this);
-        lastQuad = currentQuad;
+        currentMouseHoveringQuad.OnChampionEnterOnMouse(this);
+        lastMouseHoveringQuad = currentMouseHoveringQuad;
     }
     private void OnMouseUp() {
-        if(lastQuad != null) {
-            transform.position = lastQuad.node.worldPosition;
-            lastQuad.OnChampionStay(this);
-            if(lastQuad is DeployQuad) {
-                championStateMachine.Trigger("OnDeployQuad");
-            }else if(lastQuad is PreparationQuad){     
-                championStateMachine.Trigger("OnPreparationQuad");
-            }
+        if(lastMouseHoveringQuad != null) {
+            // transform.position = lastMouseHoveringQuad.node.worldPosition;
+            // lastMouseHoveringQuad.OnChampionStay(this);
+            OnEnterQuad(lastMouseHoveringQuad);
         }
         
     }
