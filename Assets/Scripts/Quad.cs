@@ -35,21 +35,27 @@ public class Quad : MonoBehaviour {
         if(InputManager.Instance.IsLeftMouseButtonPressed) return;
         EnableEmissionShader(false);
     }
-    public void OnChampionEnter(Champion champion) {//玩家拖着英雄到格子上面的时候
+    public void OnChampionEnterOnMouse(Champion champion) {//玩家拖着英雄到格子上面的时候
         if(isChampionEnteredOnMouse) return;//如果已经在上面了就不用执行后面的了
         isChampionEnteredOnMouse = true;
         EnableEmissionShader(true);
     }
 
-    public void OnChampionExit(Champion champion) {
+    public void OnChampionExitOnMouse(Champion champion) {
         isChampionEnteredOnMouse = false;
-        championOnThisQuad = null;
         EnableEmissionShader(false);
     }
-    public void OnChampionStay(Champion champion) {
-        //鼠标松开,让英雄站在上面
+    public void OnChampionStay(Champion champion,bool isSwaping = false) {
+        //鼠标松开,让英雄站在上面,这里的逻辑应该是,如果自己的上面已经有一个英雄了,那应该让这个英雄的位置到来的这个英雄之前的位置上去     
+        if(championOnThisQuad != null && !isSwaping) {
+            champion.OnChampionSwap(championOnThisQuad);
+        }
         championOnThisQuad = champion;
         EnableEmissionShader(false);
+    }
+    public void OnChampionLeave(Champion champion) {
+        Debug.Log("OnChampionLeave");
+        championOnThisQuad = null;
     }
     public void EnableEmissionShader(bool enable) {
         if(enable) {
