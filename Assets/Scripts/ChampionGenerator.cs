@@ -9,10 +9,10 @@ public class ChampionGenerator : SingletonManager<ChampionGenerator> {
         for (int i = 0; i < dict.Count; i++) {
             if(dict.ElementAt(i).Value.ChampionOnThisQuad == null) {
                 //说明可以在这里生成
-                Vector3 pos = QuadsManager.Instance.GetQuadPositionByCoordinate(dict.ElementAt(i).Key);
+                Vector3 pos = dict.ElementAt(i).Value.node.worldPosition;
                 GameObject go = Instantiate(championPrefab,pos,Quaternion.identity);
                 if(go.TryGetComponent<Champion>(out Champion champion)) {
-                    dict.ElementAt(i).Value.OnChampionStay(champion);
+                    champion.OnDeploy(dict.ElementAt(i).Value);
                 }
                 return;
             }
