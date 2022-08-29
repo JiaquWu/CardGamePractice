@@ -20,6 +20,7 @@ public class Champion : MonoBehaviour {//棋子类,
     public string ChampionName => championName;
     private int cost;//应该某种办法让card的和它保持一致
     public int Cost => cost;
+    private bool isMouseHoveringOnThisChampion;
     [SerializeField]
     private bool isAllyChampion;//true就是友方
     private StateMachine<ChampionState> championStateMachine = new StateMachine<ChampionState>();
@@ -57,6 +58,7 @@ public class Champion : MonoBehaviour {//棋子类,
     }
     public void OnDeploy(Quad quadToStay) {
         //被部署到备战席的时候应该调用一些方法
+        isAllyChampion = true;
         InitFSM();
         RegisterThisChampion();
         OnEnterQuad(quadToStay);
@@ -64,12 +66,14 @@ public class Champion : MonoBehaviour {//棋子类,
         GameEventsManager.StartListening(GameEventTypeVoid.ENTER_COMBAT_STATE,OnEnterCombatState);
         GameEventsManager.StartListening(GameEventTypeVoid.ENETR_BONUS_STATE,OnEnterBonusState);
         GameEventsManager.StartListening(GameEventTypeGameObject.SELL_A_CHAMPION,OnSell);
+        GameEventsManager.StartListening(GameEventTypeVoid.ON_SELL_BUTTON_DOWN,OnSellButtonDown);
     }
     public void OnDisappear() {//卖掉或者升级会触发的函数,主要是取消事件监听
         GameEventsManager.StopListening(GameEventTypeVoid.ENTER_DEPLOY_STATE,OnEnterDeployState);
         GameEventsManager.StopListening(GameEventTypeVoid.ENTER_COMBAT_STATE,OnEnterCombatState);
         GameEventsManager.StopListening(GameEventTypeVoid.ENETR_BONUS_STATE,OnEnterBonusState);
         GameEventsManager.StopListening(GameEventTypeGameObject.SELL_A_CHAMPION,OnSell);
+        GameEventsManager.StopListening(GameEventTypeVoid.ON_SELL_BUTTON_DOWN,OnSellButtonDown);
     }
     public void OnChampionSwap(Champion championOnTheTargetQuad) {
         //championOnTheTargetQuad.gameObject.transform.position = lastMouseHoveringQuadThisChampionStand.node.worldPosition;
@@ -120,6 +124,15 @@ public class Champion : MonoBehaviour {//棋子类,
         }
         
     }
+    private void OnMouseDown() {
+        
+    }
+    private void OnMouseOver() {
+        isMouseHoveringOnThisChampion = true;
+    }
+    private void OnMouseExit() {
+        isMouseHoveringOnThisChampion = false;
+    }
     public void InitFSM() {
         championStateMachine.AddState(ChampionState.PREPARE,new ChampionPrepare(false));
         championStateMachine.AddState(ChampionState.IDLE,new ChampionIdle(Animator,false));//把所有要添加的state加入进来,把需要的参数传进去
@@ -167,7 +180,22 @@ public class Champion : MonoBehaviour {//棋子类,
         if(go.TryGetComponent<Champion>(out Champion _champion)) {
             _champion.OnDisappear();
             _champion.UnRegisterThisChampion();
-            Destroy(_champion);
+            if(go != null) {
+                Destroy(go);
+            }
+            
+        }
+    }
+    public void OnSellButtonDown(GameEventTypeVoid ev) {
+        //可以售卖的逻辑:首先必须鼠标放在上面,并且是正在游玩
+        //如果是deploy则是allychampion都可以卖
+        //如果是combat则只能卖在preparationquad上面的
+        if(isMouseHoveringOnThisChampion && GameManager.Instance.GameManagerStateMachine.ActiveState.name == GameState.PLAY && isAllyChampion) {
+            if((GameManager.Instance.PlayState.ActiveState.name == OnPlayState.DEPLOY ) 
+            || (GameManager.Instance.PlayState.ActiveState.name == OnPlayState.COMBAT && lastQuadThisChampionStand is PreparationQuad)) { 
+                GameEventsManager.TriggerEvent(GameEventTypeGameObject.SELL_A_CHAMPION,gameObject);
+            }
+            
         }
     }
 }
