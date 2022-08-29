@@ -20,6 +20,10 @@ public class GameManager : SingletonManager<GameManager> {
     private StateMachine<GameState> initState;
     private StateMachine<GameState,OnPlayState,string> playState;
     private StateMachine<GameState> idleState;
+
+    public StateMachine<GameState, string> GameManagerStateMachine => gameManagerStateMachine;
+    public StateMachine<GameState, OnPlayState, string> PlayState  => playState;
+
     private void Start() {
         InitFSM();
     }
