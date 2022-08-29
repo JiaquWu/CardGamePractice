@@ -11,8 +11,8 @@ public class Card :MonoBehaviour,IPointerClickHandler {//和抽卡有关的事�
     private GameObject championPrefab;//这张卡代表的英雄,应该还是要手动去配好
     public void OnPointerClick(PointerEventData eventData) {
         if(Player.Instance.Money >= cost) {
+            GameEventsManager.TriggerEvent(GameEventTypeGameObject.BUY_A_CHAMPION,championPrefab);
             //应该告诉一个英雄生成器之类的生成英雄
-            ChampionGenerator.Instance.GenerateChampion(championPrefab);
         }
     }
 }
