@@ -13,7 +13,8 @@ public enum GameEventTypeVoid {
     ENTER_IDLE_STATE,
     ENTER_DEPLOY_STATE,
     ENTER_COMBAT_STATE,
-    ENETR_BONUS_STATE
+    ENETR_BONUS_STATE,
+    ON_SELL_BUTTON_DOWN
 }
 public enum GameEventTypeInt {
 
