@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 public class ChampionGenerator : SingletonManager<ChampionGenerator> {
-    public void GenerateChampion(GameObject championPrefab) {
+    protected override void Init() {
+        GameEventsManager.StartListening(GameEventTypeGameObject.BUY_A_CHAMPION,GenerateChampion);
+    }
+    public void GenerateChampion(GameEventTypeGameObject ev,GameObject championPrefab) {
         //考虑要不要加限制,目前调试阶段不用,之后写好逻辑应该也还好
         Dictionary<Vector2,Quad> dict = QuadsManager.Instance.preparationQuadsDict;
         for (int i = 0; i < dict.Count; i++) {
@@ -19,5 +22,8 @@ public class ChampionGenerator : SingletonManager<ChampionGenerator> {
         }
         //如果没有位置可以生成
         Debug.LogWarning("no place for instantiating a new champion");
+    }
+    private void OnDisable() {
+        GameEventsManager.StopListening(GameEventTypeGameObject.BUY_A_CHAMPION,GenerateChampion);
     }
 }
