@@ -18,6 +18,8 @@ public class Champion : MonoBehaviour {//棋子类,
     [SerializeField]
     private string championName;
     public string ChampionName => championName;
+    private int cost;//应该某种办法让card的和它保持一致
+    public int Cost => cost;
     [SerializeField]
     private bool isAllyChampion;//true就是友方
     private StateMachine<ChampionState> championStateMachine = new StateMachine<ChampionState>();
@@ -61,11 +63,13 @@ public class Champion : MonoBehaviour {//棋子类,
         GameEventsManager.StartListening(GameEventTypeVoid.ENTER_DEPLOY_STATE,OnEnterDeployState);
         GameEventsManager.StartListening(GameEventTypeVoid.ENTER_COMBAT_STATE,OnEnterCombatState);
         GameEventsManager.StartListening(GameEventTypeVoid.ENETR_BONUS_STATE,OnEnterBonusState);
+        GameEventsManager.StartListening(GameEventTypeGameObject.SELL_A_CHAMPION,OnSell);
     }
     public void OnDisappear() {//卖掉或者升级会触发的函数,主要是取消事件监听
         GameEventsManager.StopListening(GameEventTypeVoid.ENTER_DEPLOY_STATE,OnEnterDeployState);
         GameEventsManager.StopListening(GameEventTypeVoid.ENTER_COMBAT_STATE,OnEnterCombatState);
         GameEventsManager.StopListening(GameEventTypeVoid.ENETR_BONUS_STATE,OnEnterBonusState);
+        GameEventsManager.StopListening(GameEventTypeGameObject.SELL_A_CHAMPION,OnSell);
     }
     public void OnChampionSwap(Champion championOnTheTargetQuad) {
         //championOnTheTargetQuad.gameObject.transform.position = lastMouseHoveringQuadThisChampionStand.node.worldPosition;
@@ -150,6 +154,20 @@ public class Champion : MonoBehaviour {//棋子类,
             AllyChampionManager.RegisterChampion(this);
         }else {
             EnemyChampionManager.RegisterChampion(this);
+        }
+    }
+    public void UnRegisterThisChampion() {
+        if(isAllyChampion) {
+            AllyChampionManager.UnregisterChampion(this);
+        }else {
+            EnemyChampionManager.UnregisterChampion(this);
+        }
+    }
+    public void OnSell(GameEventTypeGameObject ev,GameObject go) {
+        if(go.TryGetComponent<Champion>(out Champion _champion)) {
+            _champion.OnDisappear();
+            _champion.UnRegisterThisChampion();
+            Destroy(_champion);
         }
     }
 }
