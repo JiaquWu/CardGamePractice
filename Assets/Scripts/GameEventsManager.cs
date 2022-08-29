@@ -4,7 +4,8 @@ using UnityEngine;
 using UnityEngine.Events;
 
 public enum GameEventTypeGameObject {
-
+    BUY_A_CHAMPION,
+    SELL_A_CHAMPION
 }
 public enum GameEventTypeVoid {
     ENTER_INIT_STATE,
@@ -46,7 +47,7 @@ public class GameEventsManager : SingletonManager<GameEventsManager> {
     private static Dictionary<GameEventTypeFloat,FloatUnityEvent> floatEventDict;
     private static Dictionary<GameEventTypeString,StringUnityEvent> stringEventDict;
 
-    protected override void Init() {
+    static void InitDict() {
         if(gameobjectEventDict == null) {
             gameobjectEventDict = new Dictionary<GameEventTypeGameObject, GameObjectUnityEvent>();
         }
@@ -64,6 +65,7 @@ public class GameEventsManager : SingletonManager<GameEventsManager> {
         }
     }
     public static void StartListening(GameEventTypeVoid eventTypeVoid,UnityAction<GameEventTypeVoid> listener) {
+        InitDict();
         VoidUnityEvent unityEvent = null;
         if(voidEventDict.TryGetValue(eventTypeVoid,out unityEvent) == false) {//如果字典里面没有就加一个新的,如果有的话就被拿出来赋给unityEvent了
             unityEvent = new VoidUnityEvent();
@@ -72,6 +74,7 @@ public class GameEventsManager : SingletonManager<GameEventsManager> {
         unityEvent.AddListener(listener);
     }
     public static void StartListening(GameEventTypeGameObject eventTypeGameObject,UnityAction<GameEventTypeGameObject,GameObject> listener) {
+        InitDict();
         GameObjectUnityEvent unityEvent = null;
         if(gameobjectEventDict.TryGetValue(eventTypeGameObject,out unityEvent) == false) {
             unityEvent = new GameObjectUnityEvent();
@@ -80,6 +83,7 @@ public class GameEventsManager : SingletonManager<GameEventsManager> {
         unityEvent.AddListener(listener);
     }
     public static void StartListening(GameEventTypeInt eventTypeInt, UnityAction<GameEventTypeInt,int> listener) {
+        InitDict();
         IntUnityEvent unityEvent = null;
         if(intEventDict.TryGetValue(eventTypeInt,out unityEvent) == false) {
             unityEvent = new IntUnityEvent();
@@ -88,6 +92,7 @@ public class GameEventsManager : SingletonManager<GameEventsManager> {
         unityEvent.AddListener(listener);
     }
     public static void StartListening(GameEventTypeFloat eventTypeFloat,UnityAction<GameEventTypeFloat,float> listener) {
+        InitDict();
         FloatUnityEvent unityEvent = null;
         if(floatEventDict.TryGetValue(eventTypeFloat,out unityEvent) == false) {
             unityEvent = new FloatUnityEvent();
@@ -96,6 +101,7 @@ public class GameEventsManager : SingletonManager<GameEventsManager> {
         unityEvent.AddListener(listener);
     }
     public static void StartListening(GameEventTypeString eventTypeString,UnityAction<GameEventTypeString,string> listener) {
+        InitDict();
         StringUnityEvent unityEvent = null;
         if(stringEventDict.TryGetValue(eventTypeString,out unityEvent) == false) {
             unityEvent = new StringUnityEvent();
