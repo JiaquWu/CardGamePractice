@@ -17,7 +17,7 @@ public enum GameEventTypeVoid {
     ON_SELL_BUTTON_DOWN
 }
 public enum GameEventTypeInt {
-
+    CHAMPION_UPGRADE
 }
 public enum GameEventTypeFloat {
 
