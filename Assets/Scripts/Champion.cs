@@ -18,8 +18,13 @@ public class Champion : MonoBehaviour {//棋子类,
     [SerializeField]
     private string championName;
     public string ChampionName => championName;
-    private int cost;//应该某种办法让card的和它保持一致
-    public int Cost => cost;
+    [SerializeField]
+    private int defaultCost;//应该某种办法让card的和它保持一致,如果升级了应该发生变化,先手动配吧
+    private int currentCost;
+    public int Cost => currentCost;
+    private int defaultLevel = 0;
+    private int currentLevel;
+    public int Level => currentLevel;
     private bool isMouseHoveringOnThisChampion;
     [SerializeField]
     private bool isAllyChampion;//true就是友方
@@ -174,6 +179,19 @@ public class Champion : MonoBehaviour {//棋子类,
             AllyChampionManager.UnregisterChampion(this);
         }else {
             EnemyChampionManager.UnregisterChampion(this);
+        }
+    }
+    public void OnChampionUpgrade(int level) {
+        //level = 0 : remove, level = 1 : upgrade to level 1, level = 2 : upgrade to level 2
+        if(level == 0) {
+            Debug.Log("要卖掉这个英雄");
+            OnSell(GameEventTypeGameObject.SELL_A_CHAMPION,gameObject);//应该有自己的函数,不应该用这个
+        }else if(level == 1) {
+            currentLevel = 1;
+            Debug.Log("要升两星了");
+        }else if(level == 2) {
+            currentLevel = 2;
+            Debug.Log("要升三星了");
         }
     }
     public void OnSell(GameEventTypeGameObject ev,GameObject go) {
