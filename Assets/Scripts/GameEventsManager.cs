@@ -9,11 +9,17 @@ public enum GameEventTypeGameObject {
 }
 public enum GameEventTypeVoid {
     ENTER_INIT_STATE,
+    EXIT_INIT_STATE,
     ENTER_PLAY_STATE,
+    EXIT_PLAY_STATE,
     ENTER_IDLE_STATE,
+    EXIT_IDLE_STATE,
     ENTER_DEPLOY_STATE,
+    EXIT_DEPLOY_STATE,
     ENTER_COMBAT_STATE,
+    EXIT_COMBAT_STATE,
     ENETR_BONUS_STATE,
+    EXIT_BONUS_STATE,
     ON_SELL_BUTTON_DOWN
 }
 public enum GameEventTypeInt {
