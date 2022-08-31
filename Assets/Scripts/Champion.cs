@@ -64,6 +64,7 @@ public class Champion : MonoBehaviour {//棋子类,
     public void OnDeploy(Quad quadToStay) {
         //被部署到备战席的时候应该调用一些方法
         isAllyChampion = true;
+        currentLevel = defaultLevel;
         InitFSM();
         RegisterThisChampion();
         OnEnterQuad(quadToStay);
