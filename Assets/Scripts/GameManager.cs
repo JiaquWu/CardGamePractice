@@ -10,9 +10,11 @@ public enum GameState {
     IDLE//游戏的默认界面,待定
 }
 public enum OnPlayState {
+    INIT,
     DEPLOY,
     COMBAT,
-    BONUS//选秀 待定
+    BONUS,//选秀 待定
+    EXIT
 }
 public class GameManager : SingletonManager<GameManager> {
     
@@ -37,9 +39,11 @@ public class GameManager : SingletonManager<GameManager> {
         initState.AddState(GameState.INIT,new InitState(false,false));
 
         playState = new StateMachine<GameState, OnPlayState, string>();
+        playState.AddState(OnPlayState.INIT,new OnPlayStateInit(false));
         playState.AddState(OnPlayState.DEPLOY,new OnPlayStateDeploy(false));
         playState.AddState(OnPlayState.COMBAT,new OnPlayStateCombat(false));
         playState.AddState(OnPlayState.BONUS,new OnPlayStateBonus(false));
+        playState.AddState(OnPlayState.EXIT,new OnPlayStateExit(false));
         playState.AddTriggerTransitionFromAny("triggerDeploy",OnPlayState.DEPLOY);
         playState.AddTriggerTransitionFromAny("triggerCombat",OnPlayState.COMBAT);
         playState.AddTriggerTransitionFromAny("triggerBonus",OnPlayState.BONUS);
@@ -59,16 +63,13 @@ public class GameManager : SingletonManager<GameManager> {
     public void OnGameStateChange(GameStateSelector selector) {
         switch (selector.state) {
             case GameState.INIT:
-            gameManagerStateMachine.Trigger("triggerInit");
-            GameEventsManager.TriggerEvent(GameEventTypeVoid.ENTER_INIT_STATE);
+            gameManagerStateMachine.Trigger("triggerInit");  
             break;
             case GameState.PLAY:
-            gameManagerStateMachine.Trigger("triggerPlay");
-            GameEventsManager.TriggerEvent(GameEventTypeVoid.ENTER_PLAY_STATE);
+            gameManagerStateMachine.Trigger("triggerPlay"); 
             break;
             case GameState.IDLE:
             gameManagerStateMachine.Trigger("triggerIdle");
-            GameEventsManager.TriggerEvent(GameEventTypeVoid.ENTER_IDLE_STATE);
             break;
         }
     }
@@ -78,32 +79,58 @@ public class GameManager : SingletonManager<GameManager> {
         switch (selector.state) {
             case OnPlayState.DEPLOY:
             playState.Trigger("triggerDeploy");
-            GameEventsManager.TriggerEvent(GameEventTypeVoid.ENTER_DEPLOY_STATE);
             break;
             case OnPlayState.COMBAT:
             playState.Trigger("triggerCombat");
-            GameEventsManager.TriggerEvent(GameEventTypeVoid.ENTER_COMBAT_STATE);
             break;
             case OnPlayState.BONUS:
             playState.Trigger("triggerBonus");
-            GameEventsManager.TriggerEvent(GameEventTypeVoid.ENETR_BONUS_STATE);
             break;
         }
     }
 }
-
+public class OnPlayStateInit : StateBase<OnPlayState> {
+    public OnPlayStateInit(bool needsExitTime, bool isGhostState = false) : base(needsExitTime, isGhostState) {
+    }
+    public override void OnEnter() {
+        GameEventsManager.TriggerEvent(GameEventTypeVoid.ENTER_PLAY_STATE);
+    }
+    public override void OnExit() {
+        
+    }
+}
+public class OnPlayStateExit : StateBase<OnPlayState> {
+    public OnPlayStateExit(bool needsExitTime, bool isGhostState = false) : base(needsExitTime, isGhostState) {
+    }
+    public override void OnExit() {
+        GameEventsManager.TriggerEvent(GameEventTypeVoid.EXIT_PLAY_STATE);
+    }
+}
 public class OnPlayStateDeploy : StateBase<OnPlayState> {
     public OnPlayStateDeploy(bool needsExitTime) : base(needsExitTime) {
     
     }
+    public override void OnEnter() {
+        GameEventsManager.TriggerEvent(GameEventTypeVoid.ENTER_DEPLOY_STATE);
+    }
+    public override void OnExit() {
+        GameEventsManager.TriggerEvent(GameEventTypeVoid.EXIT_DEPLOY_STATE);
+    }
     public override void OnLogic() {
         Debug.Log("OnPlayStateDeploy");
     }
+    
 }
 
 public class OnPlayStateCombat : StateBase<OnPlayState> {
     public OnPlayStateCombat(bool needsExitTime) : base(needsExitTime) {
     
+    }
+    public override void OnEnter() {
+        GameEventsManager.TriggerEvent(GameEventTypeVoid.ENTER_COMBAT_STATE);
+    }
+    public override void OnExit() {
+        GameEventsManager.TriggerEvent(GameEventTypeVoid.EXIT_COMBAT_STATE);
     }
     public override void OnLogic() {
         Debug.Log("OnPlayStateCombat");
@@ -114,6 +141,12 @@ public class OnPlayStateBonus : StateBase<OnPlayState> {
     public OnPlayStateBonus(bool needsExitTime) : base(needsExitTime) {
 
     }
+    public override void OnEnter() {
+        GameEventsManager.TriggerEvent(GameEventTypeVoid.ENETR_BONUS_STATE);
+    }
+    public override void OnExit() {
+        GameEventsManager.TriggerEvent(GameEventTypeVoid.EXIT_BONUS_STATE);
+    }
     public override void OnLogic() {
         Debug.Log("OnPlayStateBonus");
     }
@@ -123,6 +156,12 @@ public class InitState : StateBase<GameState> {
     public InitState(bool needsExitTime, bool isGhostState = false) : base(needsExitTime, isGhostState) {
         //可能会是ghost state,只是初始化要做一些事情放在这个地方
     }
+    public override void OnEnter() {
+        GameEventsManager.TriggerEvent(GameEventTypeVoid.ENTER_INIT_STATE);
+    }
+    public override void OnExit() {
+        GameEventsManager.TriggerEvent(GameEventTypeVoid.EXIT_INIT_STATE);
+    }
     public override void OnLogic() {
         Debug.Log("InitState");
     }
@@ -131,6 +170,12 @@ public class InitState : StateBase<GameState> {
 public class IdleState : StateBase<GameState> {
     public IdleState(bool needsExitTime, bool isGhostState = false) : base(needsExitTime, isGhostState) {
 
+    }
+    public override void OnEnter() {
+        GameEventsManager.TriggerEvent(GameEventTypeVoid.ENTER_IDLE_STATE);
+    }
+    public override void OnExit() {
+        GameEventsManager.TriggerEvent(GameEventTypeVoid.EXIT_IDLE_STATE);
     }
     public override void OnLogic() {
         Debug.Log("IdleState");
