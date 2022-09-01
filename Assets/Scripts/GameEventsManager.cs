@@ -20,7 +20,8 @@ public enum GameEventTypeVoid {
     EXIT_COMBAT_STATE,
     ENETR_BONUS_STATE,
     EXIT_BONUS_STATE,
-    ON_SELL_BUTTON_DOWN
+    ON_SELL_BUTTON_DOWN,
+    ON_REFRESH_BUTTON_DOWN
 }
 public enum GameEventTypeInt {
     CHAMPION_UPGRADE
