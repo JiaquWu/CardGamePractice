@@ -9,5 +9,9 @@ public class InputManager : SingletonManager<InputManager> {
             Debug.Log("sell");
             GameEventsManager.TriggerEvent(GameEventTypeVoid.ON_SELL_BUTTON_DOWN);
         }
+        if(Input.GetButtonDown("Refresh")) {
+            Debug.Log("refresh");
+            GameEventsManager.TriggerEvent(GameEventTypeVoid.ON_REFRESH_BUTTON_DOWN);
+        }
     }
 }
