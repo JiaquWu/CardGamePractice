@@ -190,9 +190,11 @@ public class Champion : MonoBehaviour {//棋子类,
         }else if(level == 1) {
             currentLevel = 1;
             Debug.Log("要升两星了");
+            transform.localScale *= 1.2f;
         }else if(level == 2) {
             currentLevel = 2;
             Debug.Log("要升三星了");
+            transform.localScale *= 1.2f;
         }
     }
     public void OnSell(GameEventTypeGameObject ev,GameObject go) {
