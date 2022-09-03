@@ -24,7 +24,8 @@ public enum GameEventTypeVoid {
     ON_REFRESH_BUTTON_DOWN
 }
 public enum GameEventTypeInt {
-    CHAMPION_UPGRADE
+    CHAMPION_UPGRADE,
+    LEVEL_UP//买经验升级
 }
 public enum GameEventTypeFloat {
 
