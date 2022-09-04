@@ -1345,7 +1345,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d0c111f6e9e70ac48b39d6560eaa8307, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  championName: 
+  championName: Mutant
+  tier: 1
+  defaultCost: 1
   isAllyChampion: 0
   currentChampionStats: {fileID: 11400000, guid: fd89026682560014496353253e6774ac,
     type: 2}
