@@ -10,6 +10,8 @@ public class Player : SingletonManager<Player> {
     public List<float> CurrentChampionDropRate => currentChampionDropRate;
     private int currentLevel;
     public int CurrentLevel => currentLevel;
+    private int totalAvailabeSpace;
+    public int TotalAvailabeSpace => totalAvailabeSpace;//总共的空间和等级大多数时候一样,但是有冠冕之类的
     private int currentExp;
     public int CurrentExp => currentExp;
     private int currentRefreshCost;
@@ -34,6 +36,7 @@ public class Player : SingletonManager<Player> {
         currentBuyExpCost = GameRulesManager.defaultBuyExpCost;
         currentExpIncrementEachBuy = GameRulesManager.defaultExpIncrementEachBuy;
         currentChampionDropRate = GameRulesManager.championDropRatesByLevel[1];
+        totalAvailabeSpace = 1;
     }
     private void OnBuyAChampion(GameEventTypeChampion ev,Champion _champion) {
         money -= _champion.Cost;
@@ -78,6 +81,7 @@ public class Player : SingletonManager<Player> {
     private void OnLevelUp(GameEventTypeInt ev,int targetLevel) {
         if(GameRulesManager.championDropRatesByLevel.ContainsKey(targetLevel)) {
             currentChampionDropRate = GameRulesManager.championDropRatesByLevel[targetLevel];
+            totalAvailabeSpace = targetLevel;//这里应该加上其他的buff,如果有的话
         }
     }
     private void OnEnterDeployState(GameEventTypeVoid ev) {
