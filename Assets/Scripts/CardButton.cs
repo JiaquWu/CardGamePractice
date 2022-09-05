@@ -8,13 +8,17 @@ public class CardButton : MonoBehaviour,IPointerClickHandler {//和抽卡有关�
     
     CardSO card;
     public void OnPointerClick(PointerEventData eventData) {
-        if(card == null) return;
+        if(card == null || card.ChampionPrefab.GetComponent<Champion>() == null) return;
         if(Player.Instance.Money >= card.Cost) {
-            GameEventsManager.TriggerEvent(GameEventTypeGameObject.BUY_A_CHAMPION,card.ChampionPrefab);
+            GameEventsManager.TriggerEvent(GameEventTypeChampion.BUY_A_CHAMPION,card.ChampionPrefab.GetComponent<Champion>());
             //应该告诉一个英雄生成器之类的生成英雄
         }
     }
     public void OnRefresh(CardSO card) {
+        if(card == null) {
+            Debug.LogWarning("no card available!");
+            return;
+        }
         this.card = card;
         GetComponent<Image>().sprite = card.CardSprite;
 
