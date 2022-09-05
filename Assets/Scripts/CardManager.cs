@@ -109,6 +109,7 @@ public class CardManager : SingletonManager<CardManager> {
     public static CardSO GenerateRandomCard() {
         CardSO card = null;
         List<float> dropRate = Player.Instance.CurrentChampionDropRate;
+        if(dropRate == null) return card;
         float target = Random.Range(0,1);
         float temp = 0;
         int index = 0;//在几费的字典里面找
