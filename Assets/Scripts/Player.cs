@@ -12,8 +12,8 @@ public class Player : SingletonManager<Player> {
 
     protected override void Init() {
         GameEventsManager.StartListening(GameEventTypeVoid.ENTER_PLAY_STATE,OnEnterPlayState);
-        GameEventsManager.StartListening(GameEventTypeGameObject.BUY_A_CHAMPION,OnBuyAChampion);
-        GameEventsManager.StartListening(GameEventTypeGameObject.SELL_A_CHAMPION,OnSellAChampion);
+        GameEventsManager.StartListening(GameEventTypeChampion.BUY_A_CHAMPION,OnBuyAChampion);
+        GameEventsManager.StartListening(GameEventTypeChampion.SELL_A_CHAMPION,OnSellAChampion);
         GameEventsManager.StartListening(GameEventTypeInt.LEVEL_UP,OnLevelUp);
         
     }
@@ -22,16 +22,13 @@ public class Player : SingletonManager<Player> {
         currentLevel = 1;
         currentChampionDropRate = GameRulesManager.championDropRatesByLevel[1];
     }
-    private void OnBuyAChampion(GameEventTypeGameObject ev,GameObject go) {
-        Debug.Log("OnBuyAChampion");
-        if(go.TryGetComponent<Champion>(out Champion _champion)) {
-           money -= _champion.Cost;
-        }
+    private void OnBuyAChampion(GameEventTypeChampion ev,Champion _champion) {
+        money -= _champion.Cost;
+        Debug.Log("还有这么多钱: " + money);
     }
-    private void OnSellAChampion(GameEventTypeGameObject ev,GameObject go) {
-        if(go.TryGetComponent<Champion>(out Champion _champion)) {
-           money += _champion.Cost;
-        }
+    private void OnSellAChampion(GameEventTypeChampion ev,Champion _champion) {
+        money += _champion.Cost;
+        Debug.Log("还有这么多钱: " + money);
     }
     private void OnLevelUp(GameEventTypeInt ev,int targetLevel) {
         if(GameRulesManager.championDropRatesByLevel.ContainsKey(targetLevel)) {
@@ -40,8 +37,8 @@ public class Player : SingletonManager<Player> {
     }
     private void OnDisable() {
         GameEventsManager.StopListening(GameEventTypeVoid.ENTER_PLAY_STATE,OnEnterPlayState);
-        GameEventsManager.StopListening(GameEventTypeGameObject.BUY_A_CHAMPION,OnBuyAChampion);
-        GameEventsManager.StopListening(GameEventTypeGameObject.SELL_A_CHAMPION,OnSellAChampion);
+        GameEventsManager.StopListening(GameEventTypeChampion.BUY_A_CHAMPION,OnBuyAChampion);
+        GameEventsManager.StopListening(GameEventTypeChampion.SELL_A_CHAMPION,OnSellAChampion);
         GameEventsManager.StopListening(GameEventTypeInt.LEVEL_UP,OnLevelUp);
     }   
 }
