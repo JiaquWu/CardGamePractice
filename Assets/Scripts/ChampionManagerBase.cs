@@ -7,6 +7,11 @@ using UnityEngine;
 //管理基类,友方和敌方不太一样,但是大部分方法应该是通用的
 public class ChampionManagerBase : SingletonManager<ChampionManagerBase> {
     protected static Dictionary<string,List<Champion>> championsDict;
+    private static int spaceTakenByChampions;//已经占用的人口数量
+    public static int SpaceTakenByChampions => spaceTakenByChampions;
+    protected override void Init() {
+        spaceTakenByChampions = 0;//初始状态下没英雄在上面
+    }
     static void InitDict() {
         if(championsDict == null) {
             championsDict = new Dictionary<string, List<Champion>>();
@@ -52,5 +57,10 @@ public class ChampionManagerBase : SingletonManager<ChampionManagerBase> {
         }else if(championsDict[champion.ChampionName].Count != 0){
             championsDict[champion.ChampionName].Remove(champion);
         }
+    }
+    public static void OnSpaceChange(int modifier) {
+        //如果新英雄进来,那么人口增加,如果有英雄somehow出去,那就减少
+        spaceTakenByChampions += modifier;
+        Debug.Log("现在的人口是: " + spaceTakenByChampions);
     }
 }
