@@ -3,9 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
-public enum GameEventTypeGameObject {
+public enum GameEventTypeChampion {
     BUY_A_CHAMPION,
     SELL_A_CHAMPION
+}
+public enum GameEventTypeGameObject {
+    
 }
 public enum GameEventTypeVoid {
     ENTER_INIT_STATE,
@@ -49,12 +52,16 @@ public class GameEventsManager : SingletonManager<GameEventsManager> {
     public class StringUnityEvent : UnityEvent<GameEventTypeString,string> {
 
     }
+    public class ChampionUnityEvent : UnityEvent<GameEventTypeChampion,Champion> {
+
+    }
 
     private static Dictionary<GameEventTypeGameObject,GameObjectUnityEvent> gameobjectEventDict;
     private static Dictionary<GameEventTypeVoid,VoidUnityEvent> voidEventDict;
     private static Dictionary<GameEventTypeInt,IntUnityEvent> intEventDict;
     private static Dictionary<GameEventTypeFloat,FloatUnityEvent> floatEventDict;
     private static Dictionary<GameEventTypeString,StringUnityEvent> stringEventDict;
+    private static Dictionary<GameEventTypeChampion,ChampionUnityEvent> championEventDict;
 
     static void InitDict() {
         if(gameobjectEventDict == null) {
@@ -71,6 +78,9 @@ public class GameEventsManager : SingletonManager<GameEventsManager> {
         }
         if(stringEventDict == null) {
             stringEventDict = new Dictionary<GameEventTypeString, StringUnityEvent>();
+        }
+        if(championEventDict == null) {
+            championEventDict = new Dictionary<GameEventTypeChampion, ChampionUnityEvent>();
         }
     }
     public static void StartListening(GameEventTypeVoid eventTypeVoid,UnityAction<GameEventTypeVoid> listener) {
@@ -118,6 +128,15 @@ public class GameEventsManager : SingletonManager<GameEventsManager> {
         }
         unityEvent.AddListener(listener);
     }
+    public static void StartListening(GameEventTypeChampion eventTypeChampion,UnityAction<GameEventTypeChampion,Champion> listener) {
+        InitDict();
+        ChampionUnityEvent unityEvent = null;
+        if(championEventDict.TryGetValue(eventTypeChampion,out unityEvent) == false) {
+            unityEvent = new ChampionUnityEvent();
+            championEventDict.Add(eventTypeChampion,unityEvent);
+        }
+        unityEvent.AddListener(listener);
+;    }
     public static void StopListening(GameEventTypeVoid eventTypeVoid,UnityAction<GameEventTypeVoid> listener) {
         if(voidEventDict != null && voidEventDict.TryGetValue(eventTypeVoid,out VoidUnityEvent unityEvent)) {//只有字典不是空的并且能查找到的时候才能拿出来
             unityEvent.RemoveListener(listener);
@@ -140,6 +159,11 @@ public class GameEventsManager : SingletonManager<GameEventsManager> {
     }
     public static void StopListening(GameEventTypeString eventTypeString, UnityAction<GameEventTypeString,string> listener) {
         if(stringEventDict != null && stringEventDict.TryGetValue(eventTypeString,out StringUnityEvent unityEvent)) {
+            unityEvent.RemoveListener(listener);
+        }
+    }
+    public static void StopListening(GameEventTypeChampion eventTypeChampion, UnityAction<GameEventTypeChampion,Champion> listener) {
+        if(championEventDict != null && championEventDict.TryGetValue(eventTypeChampion, out ChampionUnityEvent unityEvent)) {
             unityEvent.RemoveListener(listener);
         }
     }
@@ -166,6 +190,11 @@ public class GameEventsManager : SingletonManager<GameEventsManager> {
     public static void TriggerEvent(GameEventTypeString eventTypeString,string p1) {
         if(stringEventDict != null && stringEventDict.TryGetValue(eventTypeString,out StringUnityEvent unityEvent)) {
             unityEvent.Invoke(eventTypeString,p1);
+        }
+    }
+    public static void TriggerEvent(GameEventTypeChampion eventTypeChampion,Champion p1) {
+        if(championEventDict != null && championEventDict.TryGetValue(eventTypeChampion,out ChampionUnityEvent unityEvent)) {
+            unityEvent.Invoke(eventTypeChampion,p1);
         }
     }
 }
