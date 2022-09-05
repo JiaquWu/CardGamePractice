@@ -37,4 +37,5 @@ public class GameRulesManager {
     public static int defaultRefreshCost = 2;
     public static int defaultBuyExpCost = 4;
     public static int defaultExpIncrementEachBuy = 4;
+    public static int defaultExpIncrementEachTurn = 2;
 }
