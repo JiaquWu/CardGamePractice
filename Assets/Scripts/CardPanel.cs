@@ -15,7 +15,6 @@ public class CardPanel : PanelBase {
     private Text expText;
     private void OnEnable() {
         cardButtons = GetComponentsInChildren<CardButton>(true).ToList<CardButton>();
-        Debug.Log(cardButtons.Count);
         GameEventsManager.StartListening(GameEventTypeVoid.EXECUTE_REFRESH,OnRefreshExecute);
         GameEventsManager.StartListening(GameEventTypeInt.UPDATE_MONEY,UpdateGoldText);
         GameEventsManager.StartListening(GameEventTypeInt.UPDATE_LEVEL,UpdateLevelText);
@@ -43,7 +42,6 @@ public class CardPanel : PanelBase {
         }
     }
     void UpdateGoldText(GameEventTypeInt ev,int goldAmount) {
-        Debug.Log("???????");
         if(goldText != null) {
             goldText.text = "Gold : " + goldAmount;
         }
