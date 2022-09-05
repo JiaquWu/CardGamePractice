@@ -23,4 +23,18 @@ public class GameRulesManager {
         {4,12},
         {5,10},
     };
+    public static Dictionary<int,int> experienceRequirementByLevel = new Dictionary<int, int>() {//key级升到下一级还需要value点经验
+        {1,2},
+        {2,4},
+        {3,6},
+        {4,10},
+        {5,20},
+        {6,36},
+        {7,56},
+        {8,80},
+        {9,100},       
+    };
+    public static int defaultRefreshCost = 2;
+    public static int defaultBuyExpCost = 4;
+    public static int defaultExpIncrementEachBuy = 4;
 }
