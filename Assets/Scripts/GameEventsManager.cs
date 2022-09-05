@@ -24,11 +24,17 @@ public enum GameEventTypeVoid {
     ENETR_BONUS_STATE,
     EXIT_BONUS_STATE,
     ON_SELL_BUTTON_DOWN,
-    ON_REFRESH_BUTTON_DOWN
+    ON_REFRESH_BUTTON_DOWN,
+    EXECUTE_REFRESH,
+    ON_BUY_EXPERIENCE_BUTTON_DOWN
 }
 public enum GameEventTypeInt {
     CHAMPION_UPGRADE,
-    LEVEL_UP//买经验升级
+    BUY_EXPERIENCE,//买经验
+    LEVEL_UP,//升级
+    UPDATE_MONEY,
+    UPDATE_LEVEL,
+    UPDATE_EXP,
 }
 public enum GameEventTypeFloat {
 
