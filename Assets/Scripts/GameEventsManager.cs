@@ -30,7 +30,7 @@ public enum GameEventTypeVoid {
 }
 public enum GameEventTypeInt {
     CHAMPION_UPGRADE,
-    BUY_EXPERIENCE,//买经验
+    GAIN_EXPERIENCE,//买经验
     LEVEL_UP,//升级
     UPDATE_MONEY,
     UPDATE_LEVEL,
