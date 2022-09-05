@@ -118,7 +118,7 @@ public class OnPlayStateDeploy : StateBase<OnPlayState> {
         GameEventsManager.TriggerEvent(GameEventTypeVoid.EXIT_DEPLOY_STATE);
     }
     public override void OnLogic() {
-        Debug.Log("OnPlayStateDeploy");
+
     }
     
 }
@@ -134,7 +134,7 @@ public class OnPlayStateCombat : StateBase<OnPlayState> {
         GameEventsManager.TriggerEvent(GameEventTypeVoid.EXIT_COMBAT_STATE);
     }
     public override void OnLogic() {
-        Debug.Log("OnPlayStateCombat");
+
     }
 }
 
@@ -149,7 +149,7 @@ public class OnPlayStateBonus : StateBase<OnPlayState> {
         GameEventsManager.TriggerEvent(GameEventTypeVoid.EXIT_BONUS_STATE);
     }
     public override void OnLogic() {
-        Debug.Log("OnPlayStateBonus");
+
     }
 }
 
@@ -164,7 +164,7 @@ public class InitState : StateBase<GameState> {
         GameEventsManager.TriggerEvent(GameEventTypeVoid.EXIT_INIT_STATE);
     }
     public override void OnLogic() {
-        Debug.Log("InitState");
+
     }
 }
 
@@ -179,6 +179,6 @@ public class IdleState : StateBase<GameState> {
         GameEventsManager.TriggerEvent(GameEventTypeVoid.EXIT_IDLE_STATE);
     }
     public override void OnLogic() {
-        Debug.Log("IdleState");
+
     }
 }
