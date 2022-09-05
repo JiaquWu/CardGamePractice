@@ -19,10 +19,17 @@ public class Champion : MonoBehaviour {//棋子类,
     private string championName;
     public string ChampionName => championName;
     [SerializeField]
-    private int defaultCost;//应该某种办法让card的和它保持一致,如果升级了应该发生变化,先手动配吧
+    private int tier;//几费卡?
+    public int Tier => tier;
+    [SerializeField]
+    private int defaultCost;//应该某种办法让card的和它保持一致,如果升级了应该发生变化,先手动配吧/卖几块钱?
     private int currentCost;
-    public int Cost => currentCost;
-    private int defaultLevel = 0;
+    public int Cost {
+        get {
+            return currentCost == 0? defaultCost : currentCost;//如果currentCost还没来得及初始化,那就返回默认的
+        }
+    }
+    private int defaultLevel = 0;//0是一星,1是2星,2是3星卡!
     private int currentLevel;
     public int Level => currentLevel;
     private bool isMouseHoveringOnThisChampion;
@@ -65,20 +72,21 @@ public class Champion : MonoBehaviour {//棋子类,
         //被部署到备战席的时候应该调用一些方法
         isAllyChampion = true;
         currentLevel = defaultLevel;
+        currentCost = defaultCost;
         InitFSM();
         RegisterThisChampion();
         OnEnterQuad(quadToStay);
         GameEventsManager.StartListening(GameEventTypeVoid.ENTER_DEPLOY_STATE,OnEnterDeployState);
         GameEventsManager.StartListening(GameEventTypeVoid.ENTER_COMBAT_STATE,OnEnterCombatState);
         GameEventsManager.StartListening(GameEventTypeVoid.ENETR_BONUS_STATE,OnEnterBonusState);
-        GameEventsManager.StartListening(GameEventTypeGameObject.SELL_A_CHAMPION,OnSell);
+        GameEventsManager.StartListening(GameEventTypeChampion.SELL_A_CHAMPION,OnSell);
         GameEventsManager.StartListening(GameEventTypeVoid.ON_SELL_BUTTON_DOWN,OnSellButtonDown);
     }
     public void OnDisappear() {//卖掉或者升级会触发的函数,主要是取消事件监听
         GameEventsManager.StopListening(GameEventTypeVoid.ENTER_DEPLOY_STATE,OnEnterDeployState);
         GameEventsManager.StopListening(GameEventTypeVoid.ENTER_COMBAT_STATE,OnEnterCombatState);
         GameEventsManager.StopListening(GameEventTypeVoid.ENETR_BONUS_STATE,OnEnterBonusState);
-        GameEventsManager.StopListening(GameEventTypeGameObject.SELL_A_CHAMPION,OnSell);
+        GameEventsManager.StopListening(GameEventTypeChampion.SELL_A_CHAMPION,OnSell);
         GameEventsManager.StopListening(GameEventTypeVoid.ON_SELL_BUTTON_DOWN,OnSellButtonDown);
     }
     public void OnChampionSwap(Champion championOnTheTargetQuad) {
@@ -186,27 +194,27 @@ public class Champion : MonoBehaviour {//棋子类,
         //level = 0 : remove, level = 1 : upgrade to level 1, level = 2 : upgrade to level 2
         if(level == 0) {
             Debug.Log("要卖掉这个英雄");
-            OnSell(GameEventTypeGameObject.SELL_A_CHAMPION,gameObject);//应该有自己的函数,不应该用这个
+            OnSell(GameEventTypeChampion.SELL_A_CHAMPION,this);//应该有自己的函数,不应该用这个
         }else if(level == 1) {
             currentLevel = 1;
+            currentCost = tier == 1? 3 : tier * 3 - 1;//一级卡两星卖三块,其余 -1
             Debug.Log("要升两星了");
             transform.localScale *= 1.2f;
         }else if(level == 2) {
             currentLevel = 2;
+            currentCost = tier == 1? 9 : tier * 9 - 5;//暂时-5试试
             Debug.Log("要升三星了");
             transform.localScale *= 1.2f;
         }
     }
-    public void OnSell(GameEventTypeGameObject ev,GameObject go) {
-        if(go.TryGetComponent<Champion>(out Champion _champion)) {
-            _champion.OnDisappear();
-            _champion.UnRegisterThisChampion();
-            if(go != null) {
-                Destroy(go);
-            }
-            
+    public void OnSell(GameEventTypeChampion ev,Champion _champion) {
+        _champion.OnDisappear();
+        _champion.UnRegisterThisChampion();
+        if(_champion != null) {
+            Destroy(_champion.gameObject);
         }
     }
+    
     public void OnSellButtonDown(GameEventTypeVoid ev) {
         //可以售卖的逻辑:首先必须鼠标放在上面,并且是正在游玩
         //如果是deploy则是allychampion都可以卖
@@ -214,7 +222,7 @@ public class Champion : MonoBehaviour {//棋子类,
         if(isMouseHoveringOnThisChampion && GameManager.Instance.GameManagerStateMachine.ActiveState.name == GameState.PLAY && isAllyChampion) {
             if((GameManager.Instance.PlayState.ActiveState.name == OnPlayState.DEPLOY ) 
             || (GameManager.Instance.PlayState.ActiveState.name == OnPlayState.COMBAT && lastQuadThisChampionStand is PreparationQuad)) { 
-                GameEventsManager.TriggerEvent(GameEventTypeGameObject.SELL_A_CHAMPION,gameObject);
+                GameEventsManager.TriggerEvent(GameEventTypeChampion.SELL_A_CHAMPION,this);
             }
             
         }
