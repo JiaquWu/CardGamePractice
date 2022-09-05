@@ -13,5 +13,9 @@ public class InputManager : SingletonManager<InputManager> {
             Debug.Log("refresh");
             GameEventsManager.TriggerEvent(GameEventTypeVoid.ON_REFRESH_BUTTON_DOWN);
         }
+        if(Input.GetButtonDown("BuyExp")) {
+            Debug.Log("buy exp");
+            GameEventsManager.TriggerEvent(GameEventTypeVoid.ON_BUY_EXPERIENCE_BUTTON_DOWN);
+        }
     }
 }
