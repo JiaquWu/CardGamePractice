@@ -25,7 +25,7 @@ public class GameManager : SingletonManager<GameManager> {
 
     public StateMachine<GameState, string> GameManagerStateMachine => gameManagerStateMachine;
     public StateMachine<GameState, OnPlayState, string> PlayState  => playState;
-
+    public static bool isPlayStateStart;//游戏是否开始了
     private void Start() {
         InitFSM();
     }
@@ -112,6 +112,7 @@ public class OnPlayStateDeploy : StateBase<OnPlayState> {
     }
     public override void OnEnter() {
         GameEventsManager.TriggerEvent(GameEventTypeVoid.ENTER_DEPLOY_STATE);
+        if(GameManager.isPlayStateStart == false) GameManager.isPlayStateStart = true;//有些事件需要第二次进入deploy才会触发
     }
     public override void OnExit() {
         GameEventsManager.TriggerEvent(GameEventTypeVoid.EXIT_DEPLOY_STATE);
