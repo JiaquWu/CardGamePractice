@@ -9,7 +9,9 @@ public class CardButton : MonoBehaviour,IPointerClickHandler {//和抽卡有关�
     CardSO card;
     public void OnPointerClick(PointerEventData eventData) {
         if(card == null || card.ChampionPrefab.GetComponent<Champion>() == null) return;
-        if(Player.Instance.Money >= card.Cost) {
+        if(Player.Instance.Money >= card.Cost && 
+        (Player.Instance.TotalAvailabeSpace > AllyChampionManager.SpaceTakenByChampions
+        || !QuadsManager.Instance.IsPreparationQuadsFull)) {//这里还要知道场上或者场下还有没有位置
             GameEventsManager.TriggerEvent(GameEventTypeChampion.BUY_A_CHAMPION,card.ChampionPrefab.GetComponent<Champion>());
             //应该告诉一个英雄生成器之类的生成英雄
         }
