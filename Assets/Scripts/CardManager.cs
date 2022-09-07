@@ -48,7 +48,7 @@ public class CardManager : SingletonManager<CardManager> {
         }
         for (int i = 0; i < Instance.level2CardSOs.Count; i++) {
             for (int j = 0; j < GameRulesManager.championPoolSizeByLevel[i+1]; j++) {
-                level2CardSOs.Add(Instance.level2CardSOs[i]);
+                level2Cards.Add(Instance.level2CardSOs[i]);
             }
             Champion champion = Instance.level2CardSOs[i].ChampionPrefab.GetComponent<Champion>();
             if(champion != null) {
@@ -57,7 +57,7 @@ public class CardManager : SingletonManager<CardManager> {
         }
         for (int i = 0; i < Instance.level3CardSOs.Count; i++) {
             for (int j = 0; j < GameRulesManager.championPoolSizeByLevel[i+1]; j++) {
-                level3CardSOs.Add(Instance.level3CardSOs[i]);
+                level3Cards.Add(Instance.level3CardSOs[i]);
             }
             Champion champion = Instance.level3CardSOs[i].ChampionPrefab.GetComponent<Champion>();
             if(champion != null) {
@@ -66,7 +66,7 @@ public class CardManager : SingletonManager<CardManager> {
         }
         for (int i = 0; i < Instance.level4CardSOs.Count; i++) {
             for (int j = 0; j < GameRulesManager.championPoolSizeByLevel[i+1]; j++) {
-                level4CardSOs.Add(Instance.level4CardSOs[i]);
+                level4Cards.Add(Instance.level4CardSOs[i]);
             }
             Champion champion = Instance.level4CardSOs[i].ChampionPrefab.GetComponent<Champion>();
             if(champion != null) {
@@ -75,7 +75,7 @@ public class CardManager : SingletonManager<CardManager> {
         }
         for (int i = 0; i < Instance.level5CardSOs.Count; i++) {
             for (int j = 0; j < GameRulesManager.championPoolSizeByLevel[i+1]; j++) {
-                level5CardSOs.Add(Instance.level5CardSOs[i]);
+                level5Cards.Add(Instance.level5CardSOs[i]);
             }
             Champion champion = Instance.level5CardSOs[i].ChampionPrefab.GetComponent<Champion>();
             if(champion != null) {
@@ -110,7 +110,7 @@ public class CardManager : SingletonManager<CardManager> {
         CardSO card = null;
         List<float> dropRate = Player.Instance.CurrentChampionDropRate;
         if(dropRate == null) return card;
-        float target = Random.Range(0,1);
+        float target = Random.Range(0f,1f);
         float temp = 0;
         int index = 0;//在几费的字典里面找
         for (int i = 0; i < dropRate.Count; i++) {
