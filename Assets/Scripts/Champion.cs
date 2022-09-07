@@ -100,7 +100,7 @@ public class Champion : MonoBehaviour {//棋子类,
     public void OnEnterQuad(Quad quad,bool isSwaping = false) {//某种方式让champion进入到一个quad,要做很多事
         if(quad is DeployQuad) {
             championStateMachine.Trigger("OnDeployQuad");
-            if(lastQuadThisChampionStand != null && lastQuadThisChampionStand is PreparationQuad) {
+            if(lastQuadThisChampionStand == null || lastQuadThisChampionStand is PreparationQuad) {//如果是null,说明直接买进去,或者从下面上去
                 if(isAllyChampion) {
                     AllyChampionManager.OnSpaceChange(space);
                 }
