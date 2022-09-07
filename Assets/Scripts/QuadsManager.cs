@@ -49,10 +49,15 @@ public class QuadsManager : SingletonManager<QuadsManager> {
         }
     }
     
-    private Dictionary<Vector2,Quad> deployQuadsDict = new Dictionary<Vector2, Quad>();
+    public Dictionary<Vector2,Quad> deployQuadsDict = new Dictionary<Vector2, Quad>();
     public Dictionary<Vector2,Quad> preparationQuadsDict = new Dictionary<Vector2, Quad>();
     private Dictionary<Vector2,Quad> enemyQuadsDict = new Dictionary<Vector2, Quad>();
     private Dictionary<Vector2,Quad> findPathDict = new Dictionary<Vector2, Quad>();//preparation和enemy区域的棋子和这个有关系
+    public bool IsPreparationQuadsFull {
+        get {
+            return !preparationQuadsDict.Values.Any(x => x.ChampionOnThisQuad == null);//如果有一个是null就说明不是满的还有位置
+        }
+    }
     private int quadSizeX;//这个是x轴总共能放多少个quad
     private int quadSizeY;
     public int MaxSize => quadSizeX * quadSizeY;
