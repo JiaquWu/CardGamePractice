@@ -8,7 +8,7 @@ using UnityEngine;
 public class ChampionManagerBase : SingletonManager<ChampionManagerBase> {
     protected static Dictionary<string,List<Champion>> championsDict;
     private static int spaceTakenByChampions;//已经占用的人口数量
-    public static int SpaceTakenByChampions => spaceTakenByChampions;
+    public static int SpaceTakenByChampions => spaceTakenByChampions;//在考虑要不要把这个字段换到其他位置?不确定 再看看
     protected override void Init() {
         spaceTakenByChampions = 0;//初始状态下没英雄在上面
     }
