@@ -29,7 +29,7 @@ public class Player : SingletonManager<Player> {
         
     }
     private void OnEnterPlayState(GameEventTypeVoid ev) {
-        money = 100;//游戏初始化,那么金币清零
+        money = 200;//游戏初始化,那么金币清零
         currentLevel = 1;
         currentExp = 0;
         currentRefreshCost = GameRulesManager.defaultRefreshCost;
