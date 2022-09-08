@@ -53,7 +53,8 @@ public class Champion : MonoBehaviour {//棋子类,
     public ChampionAbility championAbility;
 
     protected ChampionState currentChampionState;
-    Quad lastQuadThisChampionStand = null;//这个变量只有在鼠标松开之后变化,和换位置有关
+    Quad lastQuadThisChampionStand = null;//英雄的位置发生变化,包括进来离开,都应该改变
+    public Quad LastQuadThisChampionStand => lastQuadThisChampionStand;
     Quad lastMouseHoveringQuad = null;//这个变量和currentMouseHoveringQuad在鼠标拖拽过程中会变化
     Quad currentMouseHoveringQuad = null;
 
@@ -77,13 +78,13 @@ public class Champion : MonoBehaviour {//棋子类,
         currentCost = defaultCost;
         space = 1;//默认是1
         InitFSM();
-        RegisterThisChampion();
         OnEnterQuad(quadToStay);
         GameEventsManager.StartListening(GameEventTypeVoid.ENTER_DEPLOY_STATE,OnEnterDeployState);
         GameEventsManager.StartListening(GameEventTypeVoid.ENTER_COMBAT_STATE,OnEnterCombatState);
         GameEventsManager.StartListening(GameEventTypeVoid.ENETR_BONUS_STATE,OnEnterBonusState);
         GameEventsManager.StartListening(GameEventTypeChampion.SELL_A_CHAMPION,OnSell);
         GameEventsManager.StartListening(GameEventTypeVoid.ON_SELL_BUTTON_DOWN,OnSellButtonDown);
+        RegisterThisChampion();//所有工作都做完再注册
     }
     public void OnDisappear() {//卖掉或者升级会触发的函数,主要是取消事件监听
         GameEventsManager.StopListening(GameEventTypeVoid.ENTER_DEPLOY_STATE,OnEnterDeployState);
@@ -102,7 +103,7 @@ public class Champion : MonoBehaviour {//棋子类,
             championStateMachine.Trigger("OnDeployQuad");
             if(lastQuadThisChampionStand == null || lastQuadThisChampionStand is PreparationQuad) {//如果是null,说明直接买进去,或者从下面上去
                 if(isAllyChampion) {
-                    AllyChampionManager.OnSpaceChange(space);
+                    AllyChampionManager.Instance.OnSpaceChange(space);
                 }
                 Debug.Log("说明成功从备战到了场上,那么英雄数量会+1");
             }
@@ -110,7 +111,7 @@ public class Champion : MonoBehaviour {//棋子类,
             championStateMachine.Trigger("OnPreparationQuad");
             if(lastQuadThisChampionStand != null && lastQuadThisChampionStand is DeployQuad) {
                 if(isAllyChampion) {
-                    AllyChampionManager.OnSpaceChange(space * -1);
+                    AllyChampionManager.Instance.OnSpaceChange(space * -1);
                 }
                 Debug.Log("说明是从场上撤下来,英雄数量-1");
             }
@@ -128,6 +129,11 @@ public class Champion : MonoBehaviour {//棋子类,
     private void OnMouseDrag() {
         // Debug.Log(Input.mousePosition);
         // Debug.Log(Camera.main.ScreenToWorldPoint(Input.mousePosition));
+        if(!(GameManager.Instance.PlayState.ActiveState.name == OnPlayState.DEPLOY
+        || (GameManager.Instance.PlayState.ActiveState.name == OnPlayState.COMBAT && lastQuadThisChampionStand is PreparationQuad))) {
+            return;//只有deploy阶段和combat在场下的棋子可以动
+        }
+        
         Vector3 screenPos = Camera.main.WorldToScreenPoint(transform.position);
         Vector3 temp = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x,Input.mousePosition.y,screenPos.z));
         temp.y = QuadsManager.Instance.CurrentMap.OriginPoint.y;
@@ -150,14 +156,27 @@ public class Champion : MonoBehaviour {//棋子类,
             if(isAllyChampion) {
                 if(lastQuadThisChampionStand is PreparationQuad && lastMouseHoveringQuad is DeployQuad) {
                     //如果是要从下面上去,
-                    if(Player.Instance.TotalAvailabeSpace >= AllyChampionManager.SpaceTakenByChampions + space
-                    || lastMouseHoveringQuad.ChampionOnThisQuad != null) {
-                        // 如果加上我这个英雄,空间还够,那就可以进去,或者我去的地方有英雄,那么就是交换,也可以进去
+                    if(GameManager.Instance.PlayState.ActiveState.name == OnPlayState.DEPLOY//只有deploy才能放上去吖
+                    && ((lastMouseHoveringQuad.ChampionOnThisQuad == null && Player.Instance.TotalAvailabeSpace 
+                        >= AllyChampionManager.SpaceTakenByChampions + space)
+                    || (lastMouseHoveringQuad.ChampionOnThisQuad != null && Player.Instance.TotalAvailabeSpace 
+                        >= AllyChampionManager.SpaceTakenByChampions + lastMouseHoveringQuad.ChampionOnThisQuad.Space - space))) {
+                        // 如果加上我这个英雄,空间还够,那就可以进去,或者我去的地方有英雄,那么就是交换,也可以进去,但是交换要看交换的英雄space
                         OnEnterQuad(lastMouseHoveringQuad);
-                    }else {//如果是空quad,但是没人口给你上了,就回去
+                    }else {//既然上不去,那就回去
                         OnEnterQuad(lastQuadThisChampionStand);
                     }
-                }else {//在其他情况下应该任意移动
+                }else if(lastQuadThisChampionStand is DeployQuad && lastMouseHoveringQuad is PreparationQuad) {
+                    if(lastMouseHoveringQuad.ChampionOnThisQuad == null 
+                    ||(lastMouseHoveringQuad.ChampionOnThisQuad != null && Player.Instance.TotalAvailabeSpace 
+                        >= AllyChampionManager.SpaceTakenByChampions + lastMouseHoveringQuad.ChampionOnThisQuad.Space - space)) {
+                            //如果是放下来,形成交换,那也要判定space
+                            OnEnterQuad(lastMouseHoveringQuad);
+                    }else {
+                        OnEnterQuad(lastQuadThisChampionStand);
+                    }
+                    
+                }else {//其余情况随便动
                     OnEnterQuad(lastMouseHoveringQuad);
                 }
             } 
@@ -174,13 +193,14 @@ public class Champion : MonoBehaviour {//棋子类,
         isMouseHoveringOnThisChampion = false;
     }
     public void InitFSM() {
-        championStateMachine.AddState(ChampionState.PREPARE,new ChampionPrepare(false));
+        championStateMachine.AddState(ChampionState.PREPARE,new ChampionPrepare(Animator,false));
         championStateMachine.AddState(ChampionState.IDLE,new ChampionIdle(Animator,false));//把所有要添加的state加入进来,把需要的参数传进去
-        championStateMachine.AddState(ChampionState.WALK,new ChampionWalk(false));
-        championStateMachine.AddState(ChampionState.ATTACK,new ChampionAttack(false));
-        championStateMachine.AddState(ChampionState.DEAD,new ChampionDead(false));
+        championStateMachine.AddState(ChampionState.WALK,new ChampionWalk(Animator,false));
+        championStateMachine.AddState(ChampionState.ATTACK,new ChampionAttack(Animator,false));
+        championStateMachine.AddState(ChampionState.DEAD,new ChampionDead(Animator,false));
 
         championStateMachine.AddTriggerTransition("BattleStart",ChampionState.IDLE,ChampionState.WALK);//战斗开始,开始行动
+        championStateMachine.AddTriggerTransition("Attack",ChampionState.WALK,ChampionState.ATTACK);
         championStateMachine.AddTriggerTransition("OnPreparationQuad",ChampionState.IDLE,ChampionState.PREPARE);
         championStateMachine.AddTriggerTransition("OnDeployQuad",ChampionState.PREPARE,ChampionState.IDLE);
 
@@ -204,23 +224,30 @@ public class Champion : MonoBehaviour {//棋子类,
     }
     public void RegisterThisChampion() {
         if(isAllyChampion) {
-            AllyChampionManager.RegisterChampion(this);
+            AllyChampionManager.Instance.RegisterChampion(this);
         }else {
-            EnemyChampionManager.RegisterChampion(this);
+            EnemyChampionManager.Instance.RegisterChampion(this);
         }
     }
     public void UnRegisterThisChampion() {
         if(isAllyChampion) {
-            AllyChampionManager.UnregisterChampion(this);
+            AllyChampionManager.Instance.UnregisterChampion(this);
         }else {
-            EnemyChampionManager.UnregisterChampion(this);
+            EnemyChampionManager.Instance.UnregisterChampion(this);
         }
     }
     public void OnChampionUpgrade(int level) {
         //level = 0 : remove, level = 1 : upgrade to level 1, level = 2 : upgrade to level 2
         if(level == 0) {
             Debug.Log("要卖掉这个英雄");
-            OnSell(GameEventTypeChampion.SELL_A_CHAMPION,this);//应该有自己的函数,不应该用这个
+            //OnSell(GameEventTypeChampion.SELL_A_CHAMPION,this);//应该有自己的函数,不应该用这个
+            lastQuadThisChampionStand.OnChampionLeave(this);
+            if(lastQuadThisChampionStand is DeployQuad) {
+                AllyChampionManager.Instance.OnSpaceChange(Space * -1);
+            }
+            OnDisappear();
+            UnRegisterThisChampion();
+            Destroy(gameObject);//不需要检测null
         }else if(level == 1) {
             currentLevel = 1;
             currentCost = tier == 1? 3 : tier * 3 - 1;//一级卡两星卖三块,其余 -1
@@ -231,14 +258,16 @@ public class Champion : MonoBehaviour {//棋子类,
             currentCost = tier == 1? 9 : tier * 9 - 5;//暂时-5试试
             Debug.Log("要升三星了");
             transform.localScale *= 1.2f;
+            //升星之后就应该刷不出这个卡了.
         }
     }
     public void OnSell(GameEventTypeChampion ev,Champion _champion) {
         if(_champion != this) return;//其他英雄不应该卖自己
         //要判断英雄如果是在deploy区域,那么space会减少
+        _champion.lastQuadThisChampionStand.OnChampionLeave(_champion);
         if(_champion.lastQuadThisChampionStand is DeployQuad) {
             if(_champion.isAllyChampion) {//目前enemy先不管
-                AllyChampionManager.OnSpaceChange(_champion.Space * -1);
+                AllyChampionManager.Instance.OnSpaceChange(_champion.Space * -1);
             }
         }
         _champion.OnDisappear();
@@ -265,7 +294,7 @@ public class ChampionAbility:ScriptableObject {//每个英雄的大招不一样
     }
 }
 
-public class ChampionIdle : StateBase<ChampionState> {
+public class ChampionIdle : StateBase<ChampionState> {//idle是已经在场上了,prepare是还在下面,播放动画都是idle,但是性质不一样
     Animator animator;
     public ChampionIdle(Animator animator, bool needsExitTime) : base(needsExitTime) {
 
@@ -282,7 +311,8 @@ public class ChampionIdle : StateBase<ChampionState> {
 }
 
 public class ChampionPrepare: StateBase<ChampionState> {
-    public ChampionPrepare(bool needsExitTime) : base(needsExitTime) {
+    Animator animator;
+    public ChampionPrepare(Animator animator, bool needsExitTime) : base(needsExitTime) {
 
     }
     public override void OnEnter() {
@@ -296,22 +326,26 @@ public class ChampionPrepare: StateBase<ChampionState> {
     }
 }
 public class ChampionWalk: StateBase<ChampionState> {
-    public ChampionWalk(bool needsExitTime) : base(needsExitTime) {
-
+    private Animator animator;
+    public ChampionWalk(Animator animator,bool needsExitTime) : base(needsExitTime) {
+        this.animator = animator;
     }
     public override void OnEnter() {
-        
+        //战斗开始的时候会进来,这里首先应该判断是否有怪可以攻击
+        //没有检测是否存在,为了省事先这样,手动配的时候需要确保有walk
+        animator.SetTrigger("Walk");
     }
     public override void OnLogic() {
         
     }
     public override void OnExit() {
-        
+        animator.ResetTrigger("Walk");
     }
 }
 public class ChampionAttack: StateBase<ChampionState> {
-    public ChampionAttack(bool needsExitTime) : base(needsExitTime) {
-
+    private Animator animator;
+    public ChampionAttack(Animator animator, bool needsExitTime) : base(needsExitTime) {
+        this.animator = animator;
     }
     public override void OnEnter() {
         
@@ -324,8 +358,9 @@ public class ChampionAttack: StateBase<ChampionState> {
     }
 }
 public class ChampionDead: StateBase<ChampionState> {
-    public ChampionDead(bool needsExitTime) : base(needsExitTime) {
-
+    private Animator animator;
+    public ChampionDead(Animator animator,bool needsExitTime) : base(needsExitTime) {
+        this.animator = animator;
     }
     public override void OnEnter() {
         
