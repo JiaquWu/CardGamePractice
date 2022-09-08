@@ -5,7 +5,8 @@ using UnityEngine.Events;
 
 public enum GameEventTypeChampion {
     BUY_A_CHAMPION,
-    SELL_A_CHAMPION
+    SELL_A_CHAMPION,
+    CHAMPION_UPGRADE_LEVEL_2,
 }
 public enum GameEventTypeGameObject {
     
@@ -29,7 +30,6 @@ public enum GameEventTypeVoid {
     ON_BUY_EXPERIENCE_BUTTON_DOWN
 }
 public enum GameEventTypeInt {
-    CHAMPION_UPGRADE,
     GAIN_EXPERIENCE,//买经验
     LEVEL_UP,//升级
     UPDATE_MONEY,
