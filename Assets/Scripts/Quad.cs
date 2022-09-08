@@ -36,7 +36,7 @@ public class Quad : MonoBehaviour {
         EnableEmissionShader(false);
     }
     public void OnChampionEnterOnMouse(Champion champion) {//玩家拖着英雄到格子上面的时候
-        if(isChampionEnteredOnMouse) return;//如果已经在上面了就不用执行后面的了
+        if(isChampionEnteredOnMouse || GameManager.Instance.PlayState.ActiveState.name != OnPlayState.DEPLOY) return;//如果已经在上面了就不用执行后面的了
         isChampionEnteredOnMouse = true;
         EnableEmissionShader(true);
     }
