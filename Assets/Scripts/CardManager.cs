@@ -1,4 +1,6 @@
-﻿using System.Collections;
+﻿using System.Linq;
+
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -18,7 +20,7 @@ public class CardManager : SingletonManager<CardManager> {
     private static List<CardSO> level3Cards = new List<CardSO>();
     private static List<CardSO> level4Cards = new List<CardSO>();
     private static List<CardSO> level5Cards = new List<CardSO>();
-    public static Dictionary<int,List<CardSO>> currentAvailableCards = new Dictionary<int, List<CardSO>>() {
+    public static Dictionary<int,List<CardSO>> currentAvailableCards = new Dictionary<int, List<CardSO>>() {//int = tier
         {1,level1Cards},
         {2,level2Cards},
         {3,level3Cards},
@@ -30,11 +32,13 @@ public class CardManager : SingletonManager<CardManager> {
         GameEventsManager.StartListening(GameEventTypeVoid.ENTER_PLAY_STATE,InitCardLists);
         GameEventsManager.StartListening(GameEventTypeChampion.BUY_A_CHAMPION,OnBuyAChampion);
         GameEventsManager.StartListening(GameEventTypeChampion.SELL_A_CHAMPION,OnSellAChampion);
+        GameEventsManager.StartListening(GameEventTypeChampion.CHAMPION_UPGRADE_LEVEL_2,OnChampionUpgradeLevel2);
     }
     private void OnDisable() {
         GameEventsManager.StopListening(GameEventTypeVoid.ENTER_PLAY_STATE,InitCardLists);
         GameEventsManager.StopListening(GameEventTypeChampion.BUY_A_CHAMPION,OnBuyAChampion);
         GameEventsManager.StopListening(GameEventTypeChampion.SELL_A_CHAMPION,OnSellAChampion);
+        GameEventsManager.StopListening(GameEventTypeChampion.CHAMPION_UPGRADE_LEVEL_2,OnChampionUpgradeLevel2);
     }
     private void InitCardLists(GameEventTypeVoid ev) {//感觉很笨
         for (int i = 0; i < Instance.level1CardSOs.Count; i++) {
@@ -98,19 +102,30 @@ public class CardManager : SingletonManager<CardManager> {
     private void OnSellAChampion(GameEventTypeChampion ev, Champion _champion) {
         if(currentAvailableCards.ContainsKey(_champion.Tier)) {//先检测英雄费用是否能找到
             if(championCardDict.ContainsKey(_champion.ChampionName) && championCardDict[_champion.ChampionName] != null) {//再检测能否通过这个英雄找到对应的cardSO
-                int amount = _champion.Level == 0 ? 1 : _champion.Level == 1 ? 3 : 9;//一星卡卖掉进1张,2星进3张,3星进9张
-                for (int i = 0; i < amount; i++) {
-                    currentAvailableCards[_champion.Tier].Add(championCardDict[_champion.ChampionName]);
-                }             
-                Debug.Log(currentAvailableCards[_champion.Tier].Count);
+                if(currentAvailableCards[_champion.Tier].Any(x => x.ChampionName == _champion.ChampionName) || _champion.Level == 2) {//如果list里面没有那就不会加卡,因为已经三星了,
+                    int amount = _champion.Level == 0 ? 1 : _champion.Level == 1 ? 3 : 9;//一星卡卖掉进1张,2星进3张,3星进9张
+                    for (int i = 0; i < amount; i++) {
+                        currentAvailableCards[_champion.Tier].Add(championCardDict[_champion.ChampionName]);
+                    }             
+                    Debug.Log(currentAvailableCards[_champion.Tier].Count);
+                }  
             }
+        }
+    }
+    private void OnChampionUpgradeLevel2(GameEventTypeChampion ev,Champion champion) {
+        RemoveAllChampionsInDict(champion);//除了要删卡没想到别的
+    }
+    private void RemoveAllChampionsInDict(Champion champion) {
+        if(currentAvailableCards.ContainsKey(champion.Tier)) {
+            currentAvailableCards[champion.Tier].RemoveAll(x=>x.ChampionName == champion.ChampionName);
         }
     }
     public static CardSO GenerateRandomCard() {
         CardSO card = null;
         List<float> dropRate = Player.Instance.CurrentChampionDropRate;
         if(dropRate == null) return card;
-        float target = Random.Range(0f,1f);
+        float target = Random.Range(0f,1f);//目前这么写的问题是,如果某一费的卡池里面一张卡都没有,就会有问题
+        //但是实际游戏中卡只要稍微多一点就不会出现这个问题
         float temp = 0;
         int index = 0;//在几费的字典里面找
         for (int i = 0; i < dropRate.Count; i++) {
