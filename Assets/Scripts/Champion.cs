@@ -205,11 +205,16 @@ public class Champion : MonoBehaviour {//棋子类,
         championStateMachine.AddTriggerTransition("OnDeployQuad",ChampionState.PREPARE,ChampionState.IDLE);
 
         championStateMachine.AddTriggerTransitionFromAny("Dead",ChampionState.DEAD);//随时可以会死,prepare虽然不会,但是不触发就好了
-
+        championStateMachine.AddTriggerTransitionFromAny("EnterDeployStatePrepare",ChampionState.PREPARE);
+        championStateMachine.AddTriggerTransitionFromAny("EnterDeployStateIdle",ChampionState.IDLE);
         championStateMachine.Init();
     }
     public void OnEnterDeployState(GameEventTypeVoid ev) {
-        
+        if(lastQuadThisChampionStand is PreparationQuad) {
+            championStateMachine.Trigger("EnterDeployStatePrepare");
+        }else if(lastQuadThisChampionStand is DeployQuad) {
+            championStateMachine.Trigger("EnterDeployStateIdle");
+        }
     }
     public void OnEnterCombatState(GameEventTypeVoid ev) {
         championStateMachine.Trigger("BattleStart");
@@ -297,10 +302,11 @@ public class ChampionAbility:ScriptableObject {//每个英雄的大招不一样
 public class ChampionIdle : StateBase<ChampionState> {//idle是已经在场上了,prepare是还在下面,播放动画都是idle,但是性质不一样
     Animator animator;
     public ChampionIdle(Animator animator, bool needsExitTime) : base(needsExitTime) {
-
+        this.animator = animator;
     }
     public override void OnEnter() {
         Debug.Log("DeployQuad");
+        animator.SetTrigger("Idle");
     }
     public override void OnLogic() {
         Debug.Log("DeployQuadOnLogic");
@@ -313,10 +319,11 @@ public class ChampionIdle : StateBase<ChampionState> {//idle是已经在场上�
 public class ChampionPrepare: StateBase<ChampionState> {
     Animator animator;
     public ChampionPrepare(Animator animator, bool needsExitTime) : base(needsExitTime) {
-
+        this.animator = animator;
     }
     public override void OnEnter() {
         Debug.Log("Prepare");
+        animator.SetTrigger("Idle");
     }
     public override void OnLogic() {
         Debug.Log("PrepareOnLogic");
