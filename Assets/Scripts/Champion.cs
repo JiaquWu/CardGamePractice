@@ -29,11 +29,20 @@ public class Champion : MonoBehaviour {//棋子类,
             return currentCost == 0? defaultCost : currentCost;//如果currentCost还没来得及初始化,那就返回默认的
         }
     }
+    [SerializeField]//enemy不是1级默认
     private int defaultLevel = 0;//0是一星,1是2星,2是3星卡!
     private int currentLevel;
     public int Level => currentLevel;
+    [SerializeField]
     private int space;//所占格子,默认是1,比如龙神是2
-    public int Space => space;
+    public int Space {
+        get {
+            if(space == 0) {
+                space = 1;
+            }
+            return space;
+        }
+    }
     private bool isMouseHoveringOnThisChampion;
     [SerializeField]
     private bool isAllyChampion;//true就是友方
@@ -47,7 +56,9 @@ public class Champion : MonoBehaviour {//棋子类,
             return animator;
         }
     }
+    [SerializeField]//这个要自己配好
     private ChampionStats defaultChampionStats;//默认的英雄数值,但是怎么合理配置呢?
+    [HideInInspector]
     public ChampionStats currentChampionStats;//当前英雄数值
     private List<TraitBase> traits = new List<TraitBase>();//一个英雄拥有的所有羁绊
     public ChampionAbility championAbility;
@@ -71,12 +82,18 @@ public class Champion : MonoBehaviour {//棋子类,
         //     Debug.Log(currentChampionStats.attackDamage);
         // }
     }
-    public void OnDeploy(Quad quadToStay) {
+    public void OnDeploy(Quad quadToStay,bool isAlly,int level = 0) {
         //被部署到备战席的时候应该调用一些方法
-        isAllyChampion = true;
-        currentLevel = defaultLevel;
-        currentCost = defaultCost;
-        space = 1;//默认是1
+        isAllyChampion = isAlly;
+        if(isAlly) {          
+            currentLevel = 0;
+            currentCost = defaultCost;
+        }else {
+            currentLevel = level;
+        }        
+        if(defaultChampionStats != null) {
+            currentChampionStats = new ChampionStats(defaultChampionStats,currentLevel);
+        }
         InitFSM();
         OnEnterQuad(quadToStay);
         GameEventsManager.StartListening(GameEventTypeVoid.ENTER_DEPLOY_STATE,OnEnterDeployState);
@@ -103,7 +120,7 @@ public class Champion : MonoBehaviour {//棋子类,
             championStateMachine.Trigger("OnDeployQuad");
             if(lastQuadThisChampionStand == null || lastQuadThisChampionStand is PreparationQuad) {//如果是null,说明直接买进去,或者从下面上去
                 if(isAllyChampion) {
-                    AllyChampionManager.Instance.OnSpaceChange(space);
+                    AllyChampionManager.Instance.OnSpaceChange(Space);
                 }
                 Debug.Log("说明成功从备战到了场上,那么英雄数量会+1");
             }
@@ -111,7 +128,7 @@ public class Champion : MonoBehaviour {//棋子类,
             championStateMachine.Trigger("OnPreparationQuad");
             if(lastQuadThisChampionStand != null && lastQuadThisChampionStand is DeployQuad) {
                 if(isAllyChampion) {
-                    AllyChampionManager.Instance.OnSpaceChange(space * -1);
+                    AllyChampionManager.Instance.OnSpaceChange(Space * -1);
                 }
                 Debug.Log("说明是从场上撤下来,英雄数量-1");
             }
@@ -158,9 +175,9 @@ public class Champion : MonoBehaviour {//棋子类,
                     //如果是要从下面上去,
                     if(GameManager.Instance.PlayState.ActiveState.name == OnPlayState.DEPLOY//只有deploy才能放上去吖
                     && ((lastMouseHoveringQuad.ChampionOnThisQuad == null && Player.Instance.TotalAvailabeSpace 
-                        >= AllyChampionManager.SpaceTakenByChampions + space)
+                        >= AllyChampionManager.SpaceTakenByChampions + Space)
                     || (lastMouseHoveringQuad.ChampionOnThisQuad != null && Player.Instance.TotalAvailabeSpace 
-                        >= AllyChampionManager.SpaceTakenByChampions + lastMouseHoveringQuad.ChampionOnThisQuad.Space - space))) {
+                        >= AllyChampionManager.SpaceTakenByChampions + lastMouseHoveringQuad.ChampionOnThisQuad.Space - Space))) {
                         // 如果加上我这个英雄,空间还够,那就可以进去,或者我去的地方有英雄,那么就是交换,也可以进去,但是交换要看交换的英雄space
                         OnEnterQuad(lastMouseHoveringQuad);
                     }else {//既然上不去,那就回去
@@ -169,7 +186,7 @@ public class Champion : MonoBehaviour {//棋子类,
                 }else if(lastQuadThisChampionStand is DeployQuad && lastMouseHoveringQuad is PreparationQuad) {
                     if(lastMouseHoveringQuad.ChampionOnThisQuad == null 
                     ||(lastMouseHoveringQuad.ChampionOnThisQuad != null && Player.Instance.TotalAvailabeSpace 
-                        >= AllyChampionManager.SpaceTakenByChampions + lastMouseHoveringQuad.ChampionOnThisQuad.Space - space)) {
+                        >= AllyChampionManager.SpaceTakenByChampions + lastMouseHoveringQuad.ChampionOnThisQuad.Space - Space)) {
                             //如果是放下来,形成交换,那也要判定space
                             OnEnterQuad(lastMouseHoveringQuad);
                     }else {
@@ -205,14 +222,12 @@ public class Champion : MonoBehaviour {//棋子类,
         championStateMachine.AddTriggerTransition("OnDeployQuad",ChampionState.PREPARE,ChampionState.IDLE);
 
         championStateMachine.AddTriggerTransitionFromAny("Dead",ChampionState.DEAD);//随时可以会死,prepare虽然不会,但是不触发就好了
-        championStateMachine.AddTriggerTransitionFromAny("EnterDeployStatePrepare",ChampionState.PREPARE);
+        //championStateMachine.AddTriggerTransitionFromAny("EnterDeployStatePrepare",ChampionState.PREPARE);感觉不需要
         championStateMachine.AddTriggerTransitionFromAny("EnterDeployStateIdle",ChampionState.IDLE);
         championStateMachine.Init();
     }
     public void OnEnterDeployState(GameEventTypeVoid ev) {
-        if(lastQuadThisChampionStand is PreparationQuad) {
-            championStateMachine.Trigger("EnterDeployStatePrepare");
-        }else if(lastQuadThisChampionStand is DeployQuad) {
+        if(lastQuadThisChampionStand is DeployQuad) {
             championStateMachine.Trigger("EnterDeployStateIdle");
         }
     }
