@@ -2,6 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class EnemyChampionManager : ChampionManagerBase {
+public class EnemyChampionManager : ChampionManagerBase<EnemyChampionManager> {
     
 }
