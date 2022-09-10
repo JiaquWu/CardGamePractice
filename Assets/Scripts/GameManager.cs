@@ -26,6 +26,10 @@ public class GameManager : SingletonManager<GameManager> {
     public StateMachine<GameState, string> GameManagerStateMachine => gameManagerStateMachine;
     public StateMachine<GameState, OnPlayState, string> PlayState  => playState;
     public static bool isPlayStateStart;//游戏是否开始了
+    private int roundCount;
+    public int RoundCount => roundCount;
+    [SerializeField]
+    private EnemyBuildSequence enemyBuildSequence;
     private void Start() {
         InitFSM();
     }
@@ -88,6 +92,16 @@ public class GameManager : SingletonManager<GameManager> {
             break;
         }
     }
+    public void AddRoundCount() {
+        roundCount ++;
+    }
+    public EnemyBuildSO GetCurrentEnemyBuild() {
+        if(roundCount >= 1) {//-1是因为回合数一开始就是1
+            return enemyBuildSequence.GetCurrentEnemyBuild(roundCount-1);
+        }
+        return null;
+        
+    }
 }
 public class OnPlayStateInit : StateBase<OnPlayState> {
     public OnPlayStateInit(bool needsExitTime, bool isGhostState = false) : base(needsExitTime, isGhostState) {
@@ -111,6 +125,7 @@ public class OnPlayStateDeploy : StateBase<OnPlayState> {
     
     }
     public override void OnEnter() {
+        GameManager.Instance.AddRoundCount();//每次进入都加一回合数
         GameEventsManager.TriggerEvent(GameEventTypeVoid.ENTER_DEPLOY_STATE);
         if(GameManager.isPlayStateStart == false) GameManager.isPlayStateStart = true;//有些事件需要第二次进入deploy才会触发
     }
