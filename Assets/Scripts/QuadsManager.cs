@@ -51,7 +51,7 @@ public class QuadsManager : SingletonManager<QuadsManager> {
     
     public Dictionary<Vector2,Quad> deployQuadsDict = new Dictionary<Vector2, Quad>();
     public Dictionary<Vector2,Quad> preparationQuadsDict = new Dictionary<Vector2, Quad>();
-    private Dictionary<Vector2,Quad> enemyQuadsDict = new Dictionary<Vector2, Quad>();
+    public Dictionary<Vector2,Quad> enemyQuadsDict = new Dictionary<Vector2, Quad>();
     private Dictionary<Vector2,Quad> findPathDict = new Dictionary<Vector2, Quad>();//preparation和enemy区域的棋子和这个有关系
     public bool IsPreparationQuadsFull {
         get {
