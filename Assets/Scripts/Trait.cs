@@ -53,7 +53,7 @@ public class TestTrait: TraitBase {
         }else {
             ActivatedTraitsIndex = CalculateNewIndex(championAmount);
         } 
-        champion.currentChampionStats.attackDamage += 1;
+        //champion.currentChampionStats.attackDamage += 1;
         ActivateAdditionalEffect?.Invoke(ActivatedTraitsIndex);
         return champion;
     }
