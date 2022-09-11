@@ -185,9 +185,6 @@ public class QuadsManager : SingletonManager<QuadsManager> {
         return neighbors;
     }
     private IEnumerator FindPath(Vector3 startPos, Vector3 targetPos) { //A star algorhithm
-        
-        Stopwatch sw = new Stopwatch();
-        sw.Start();
         Vector3[] waypoints = new Vector3[0];
         bool pathSuccess = false;
         Node startNode = NodeFromWorldPoint(startPos);
@@ -208,8 +205,6 @@ public class QuadsManager : SingletonManager<QuadsManager> {
             // openSet.Remove(currentNode);
             closedSet.Add(currentNode);
             if(currentNode == targetNode) {
-                sw.Stop();
-                UnityEngine.Debug.Log("Path found: " + sw.ElapsedMilliseconds);
                 pathSuccess = true;
                 
                 break;//对于ienumerator来说,yield break = return, break只是跳出这个循环
@@ -251,26 +246,29 @@ public class QuadsManager : SingletonManager<QuadsManager> {
         Vector3[] waypoints = SimplifyPath(path);
         Array.Reverse(waypoints);
         //目前下面执行的是显示找到的道路,之后会被更改
-        foreach (var item in path) {
-            UnityEngine.Debug.Log(new Vector2(item.gridX,item.gridY));
-            if(QuadFromNode(item).TryGetComponent<Quad>(out Quad quad)) {
-               quad.EnableEmissionShader(true);
-            } 
-        }
+        // foreach (var item in path) {
+        //     UnityEngine.Debug.Log(new Vector2(item.gridX,item.gridY));
+        //     if(QuadFromNode(item).TryGetComponent<Quad>(out Quad quad)) {
+        //        quad.EnableEmissionShader(true);
+        //     } 
+        // }
         return waypoints;
     }
     Vector3[] SimplifyPath(List<Node> path) {//让node转化为道路的具体坐标点,其中相同方向的点会被忽略
         List<Vector3> waypoints = new List<Vector3>();
-        Vector2 directionOld = Vector2.zero;
-
-        for (int i = 1; i < path.Count; i++) {//如果起点终点一样,path为空,根本不会进循环,path.count为1就是只有两个点,也不会进循环.
-            Vector2 directionNew = new Vector2(path[i-1].gridX - path[i].gridX,path[i-1].gridY - path[i].gridY);//之前node的寻路系统坐标和之后node
-            if(directionNew != directionOld) {//第一个点会被记下来,然后到下一次改方向的时候会记下来
-                //waypoints.Add(path[i].worldPosition);//改方向之后加新的点,第一格add的点一定是终点旁边的点而不是终点,并且行径路线会出现斜线的情况
-                waypoints.Add(path[i-1].worldPosition);//如果是i-1,那也就是终点也会记下来,因为RetracePath方法中一定会add endNode,所以unit会到达终点而不是终点旁边,并且走的路线更直,而不是斜线
-            }
-            directionOld = directionNew;
+        for (int i = 1; i < path.Count; i++) {//不简化的写法
+            waypoints.Add(path[i-1].worldPosition);
         }
+        // Vector2 directionOld = Vector2.zero;
+
+        // for (int i = 1; i < path.Count; i++) {//如果起点终点一样,path为空,根本不会进循环,path.count为1就是只有两个点,也不会进循环.
+        //     Vector2 directionNew = new Vector2(path[i-1].gridX - path[i].gridX,path[i-1].gridY - path[i].gridY);//之前node的寻路系统坐标和之后node
+        //     if(directionNew != directionOld) {//第一个点会被记下来,然后到下一次改方向的时候会记下来
+        //         //waypoints.Add(path[i].worldPosition);//改方向之后加新的点,第一格add的点一定是终点旁边的点而不是终点,并且行径路线会出现斜线的情况
+        //         waypoints.Add(path[i-1].worldPosition);//如果是i-1,那也就是终点也会记下来,因为RetracePath方法中一定会add endNode,所以unit会到达终点而不是终点旁边,并且走的路线更直,而不是斜线
+        //     }
+        //     directionOld = directionNew;
+        // }
         return waypoints.ToArray();//如果path有两个点以上,才会进循环,waypoints才不是空的.其实没有问题,因为一个点说明目标就在旁边,说明已经找到路了
         //使用的时候需要注意判断返回的这个Vector3[]里面有没有东西就好了!
     }
