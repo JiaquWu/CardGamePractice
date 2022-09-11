@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using FSM;
@@ -132,6 +133,8 @@ public class Champion : MonoBehaviour {//棋子类,
                 }
                 Debug.Log("说明是从场上撤下来,英雄数量-1");
             }
+        }else if(quad is EnemyQuad) {
+            championStateMachine.Trigger("EnterEnemyQuad");
         }
         transform.position = quad.node.worldPosition;
         if(lastQuadThisChampionStand != null && quad.ChampionOnThisQuad == null && lastQuadThisChampionStand != quad) {
@@ -212,7 +215,7 @@ public class Champion : MonoBehaviour {//棋子类,
     public void InitFSM() {
         championStateMachine.AddState(ChampionState.PREPARE,new ChampionPrepare(Animator,false));
         championStateMachine.AddState(ChampionState.IDLE,new ChampionIdle(Animator,false));//把所有要添加的state加入进来,把需要的参数传进去
-        championStateMachine.AddState(ChampionState.WALK,new ChampionWalk(Animator,false));
+        championStateMachine.AddState(ChampionState.WALK,new ChampionWalk(this,Animator,()=>championStateMachine.Trigger("Attack"), false));
         championStateMachine.AddState(ChampionState.ATTACK,new ChampionAttack(Animator,false));
         championStateMachine.AddState(ChampionState.DEAD,new ChampionDead(Animator,false));
 
@@ -224,6 +227,7 @@ public class Champion : MonoBehaviour {//棋子类,
         championStateMachine.AddTriggerTransitionFromAny("Dead",ChampionState.DEAD);//随时可以会死,prepare虽然不会,但是不触发就好了
         //championStateMachine.AddTriggerTransitionFromAny("EnterDeployStatePrepare",ChampionState.PREPARE);感觉不需要
         championStateMachine.AddTriggerTransitionFromAny("EnterDeployStateIdle",ChampionState.IDLE);
+        championStateMachine.AddTriggerTransitionFromAny("EnterEnemyQuad",ChampionState.IDLE);//enemy用的
         championStateMachine.Init();
     }
     public void OnEnterDeployState(GameEventTypeVoid ev) {
@@ -255,6 +259,15 @@ public class Champion : MonoBehaviour {//棋子类,
         }else {
             EnemyChampionManager.Instance.UnregisterChampion(this);
         }
+    }
+    public Vector3 GetNearestOpponentChampionPos() {
+        Vector3 result = Vector3.zero;
+        if(isAllyChampion) {
+           result = EnemyChampionManager.Instance.GetNearestOpponentChampion(this);
+        }else {
+           result = AllyChampionManager.Instance.GetNearestOpponentChampion(this);
+        }
+        return result;
     }
     public void OnChampionUpgrade(int level) {
         //level = 0 : remove, level = 1 : upgrade to level 1, level = 2 : upgrade to level 2
@@ -349,19 +362,30 @@ public class ChampionPrepare: StateBase<ChampionState> {
 }
 public class ChampionWalk: StateBase<ChampionState> {
     private Animator animator;
-    public ChampionWalk(Animator animator,bool needsExitTime) : base(needsExitTime) {
+    private Champion champion;
+    Vector3[] path;
+    int targetIndex;
+    float speed = 1;
+    public ChampionWalk(Champion champion, Animator animator,Action trigger, bool needsExitTime) : base(needsExitTime) {
+        this.champion = champion;
         this.animator = animator;
     }
     public override void OnEnter() {
         //战斗开始的时候会进来,这里首先应该判断是否有怪可以攻击
         //没有检测是否存在,为了省事先这样,手动配的时候需要确保有walk
         animator.SetTrigger("Walk");
+        //需要请求一个寻路,需要知道终点是啥
+        //对于ally来说,终点应该是离自己最近的enemy,反之亦然
+        Debug.Log("最近的距离是 " + champion.GetNearestOpponentChampionPos());
     }
     public override void OnLogic() {
         
     }
     public override void OnExit() {
         animator.ResetTrigger("Walk");
+    }
+    public void OnPathFound(Vector3[] newPath, bool pathSuccessful) {
+        //寻路寻到了就开始走
     }
 }
 public class ChampionAttack: StateBase<ChampionState> {
