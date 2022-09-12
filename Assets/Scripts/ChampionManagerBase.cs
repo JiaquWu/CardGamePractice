@@ -38,30 +38,32 @@ where T:ChampionManagerBase<T> {
             championsDict[champion.ChampionName].Remove(champion);
         }
     }
-    public Vector3 GetNearestOpponentChampion(Champion champion) {
+    public Vector3 GetNearestOpponentChampion(Champion champion,out Champion targetChampion) {
         //将字典里面每个英雄位置和目标英雄计算得出最近的位置
-        //下面两种方法不知道哪个快
-        var champions = from list in championsDict.Values.ToList()
-                        from cham in list
-                        select cham;
-        var positions = from champ in champions
-                        select champ.transform.position; 
-        Vector3 min = positions.ToList().Aggregate((pos1,pos2) => 
-        Vector3.Distance(pos1,champion.transform.position)
-        < Vector3.Distance(pos2,champion.transform.position)
-        ? pos1 : pos2);
-        return min;
-        // Vector3 temp = Vector3.positiveInfinity;
-        // for (int i = 0; i < championsDict.Count; i++) {
-        //     for (int j = 0; j < championsDict.ElementAt(i).Value.Count; j++) {
-        //         if(Vector3.Distance(championsDict.ElementAt(i).Value[j].transform.position,champion.transform.position) 
-        //         < Vector3.Distance(temp,champion.transform.position)) {
-        //             temp = championsDict.ElementAt(i).Value[j].transform.position;
-        //         }
+        //下面两种方法不知道哪个快,下面一个方法的好处是可以out
+        targetChampion = null;
+        // var champions = from list in championsDict.Values.ToList()
+        //                 from cham in list
+        //                 select cham;
+        // var positions = from champ in champions
+        //                 select champ.transform.position; 
+        // Vector3 min = positions.ToList().Aggregate((pos1,pos2) => 
+        // Vector3.Distance(pos1,champion.transform.position)
+        // < Vector3.Distance(pos2,champion.transform.position)
+        // ? pos1 : pos2);
+        // return min;
+        Vector3 temp = Vector3.positiveInfinity;
+        for (int i = 0; i < championsDict.Count; i++) {
+            for (int j = 0; j < championsDict.ElementAt(i).Value.Count; j++) {
+                if(Vector3.Distance(championsDict.ElementAt(i).Value[j].transform.position,champion.transform.position) 
+                < Vector3.Distance(temp,champion.transform.position)) {
+                    temp = championsDict.ElementAt(i).Value[j].transform.position;
+                    targetChampion = championsDict.ElementAt(i).Value[j];
+                }
 
-        //     }
-        // }
-        // return temp;
+            }
+        }
+        return temp;
     }
     protected virtual void OnEnterCombatState(GameEventTypeVoid ev) {
         
