@@ -124,8 +124,9 @@ public class QuadsManager : SingletonManager<QuadsManager> {
            }
         } 
     }
-    public Quad GetQuadByPosition(Vector3 worldPosition) {
+    public Quad GetAllyQuadByPosition(Vector3 worldPosition) {
         //应该有一种方法来判断点在哪片区域
+        //这个方法能判断点是否在友方可控制的区域
         for (int i = 0; i < preparationQuadsDict.Count; i++) {
             Vector3 nodePos = preparationQuadsDict.ElementAt(i).Value.node.worldPosition;
             if((nodePos.x - unitScaleRatio / 2 <= worldPosition.x && worldPosition.x <= nodePos.x + unitScaleRatio / 2)
@@ -138,6 +139,24 @@ public class QuadsManager : SingletonManager<QuadsManager> {
             if((nodePos.x - unitScaleRatio / 2 <= worldPosition.x && worldPosition.x <= nodePos.x + unitScaleRatio / 2)
             && (nodePos.z - unitScaleRatio / 2 <= worldPosition.z && worldPosition.z <= nodePos.z + unitScaleRatio / 2)) {
                 return deployQuadsDict.ElementAt(i).Value.node.attachedQuad;
+            }
+        }
+        return null;
+    }
+    public Quad GetCombatQuadByPostion(Vector3 worldPosition) {
+        //用来判断点在战斗相关的区域
+        for (int i = 0; i < deployQuadsDict.Count; i++) {
+            Vector3 nodePos = deployQuadsDict.ElementAt(i).Value.node.worldPosition;
+            if((nodePos.x - unitScaleRatio / 2 <= worldPosition.x && worldPosition.x <= nodePos.x + unitScaleRatio / 2)
+            && (nodePos.z - unitScaleRatio / 2 <= worldPosition.z && worldPosition.z <= nodePos.z + unitScaleRatio / 2)) {
+                return deployQuadsDict.ElementAt(i).Value.node.attachedQuad;
+            }
+        }
+        for (int i = 0; i < enemyQuadsDict.Count; i++) {
+            Vector3 nodePos = enemyQuadsDict.ElementAt(i).Value.node.worldPosition;
+            if((nodePos.x - unitScaleRatio / 2 <= worldPosition.x && worldPosition.x <= nodePos.x + unitScaleRatio / 2)
+            && (nodePos.z - unitScaleRatio / 2 <= worldPosition.z && worldPosition.z <= nodePos.z + unitScaleRatio / 2)) {
+                return enemyQuadsDict.ElementAt(i).Value.node.attachedQuad;
             }
         }
         return null;
@@ -189,14 +208,14 @@ public class QuadsManager : SingletonManager<QuadsManager> {
         bool pathSuccess = false;
         Node startNode = NodeFromWorldPoint(startPos);
         Node targetNode = NodeFromWorldPoint(targetPos);
-        if(!startNode.walkable || !targetNode.walkable) yield return null;
+        //if(!startNode.walkable || !targetNode.walkable) yield return null;
         Heap<Node> openSet = new Heap<Node>(MaxSize);
         //List<Node> openSet = new List<Node>();
         HashSet<Node> closedSet = new HashSet<Node>();
         openSet.Add(startNode);
-        
         while(openSet.Count > 0) {
             Node currentNode = openSet.RemoveFirst();//heap!
+            //UnityEngine.Debug.Log("currentnode的坐标是: " + currentNode.worldPosition + "targetnode的坐标是 " + targetNode.worldPosition);
             // for (int i = 1; i < openSet.Count; i++) {
             //     if(openSet[i].fCost < currentNode.fCost || openSet[i].fCost == currentNode.fCost && openSet[i].hCost < currentNode.hCost) {
             //         currentNode = openSet[i];
@@ -204,9 +223,13 @@ public class QuadsManager : SingletonManager<QuadsManager> {
             // }
             // openSet.Remove(currentNode);
             closedSet.Add(currentNode);
-            if(currentNode == targetNode) {
+            // if(currentNode == targetNode) {
+            //     pathSuccess = true;
+            //     break;//对于ienumerator来说,yield break = return, break只是跳出这个循环
+            // }
+            if(GetNeighbors(currentNode).Contains(targetNode)) {//因为终点有champion,node不是walkable的,所以找邻居就可以了
+                targetNode = currentNode;
                 pathSuccess = true;
-                
                 break;//对于ienumerator来说,yield break = return, break只是跳出这个循环
             }
             foreach (var item in GetNeighbors(currentNode)) {
