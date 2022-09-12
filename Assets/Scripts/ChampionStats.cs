@@ -42,7 +42,7 @@ public class ChampionStats:ScriptableObject {//英雄数据,暂时还是用scrip
     //     this.criticalDamage = criticalDamage;
     //     this.attackRange = attackRange;
     // }
-    public ChampionStats(ChampionStats targetStats,int level) {//什么时候会new一个呢,在初始化数值的时候应该需要,初始的数值就是根据几星来从list中拿数据
+    public void CopyChampionStats(ChampionStats targetStats,int level) {//什么时候会new一个呢,在初始化数值的时候应该需要,初始的数值就是根据几星来从list中拿数据
         this.MaxHealthPoints = targetStats.maxHealthPointsList[level];     
         this.MaxManaPoints = targetStats.maxManaPointsList[level];
         this.DefautManaPoints = targetStats.DefautManaPoints;
