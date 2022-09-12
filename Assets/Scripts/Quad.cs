@@ -47,15 +47,17 @@ public class Quad : MonoBehaviour {
     }
     public void OnChampionStay(Champion champion,bool isSwaping = false) {
         //鼠标松开,让英雄站在上面,这里的逻辑应该是,如果自己的上面已经有一个英雄了,那应该让这个英雄的位置到来的这个英雄之前的位置上去     
-        if(championOnThisQuad != null && !isSwaping) {
+        if(championOnThisQuad != null && !isSwaping && !GameManager.Instance.isInCombat) {
             champion.OnChampionSwap(championOnThisQuad);
         }
         championOnThisQuad = champion;
+        node.walkable = false;
         EnableEmissionShader(false);
     }
     public void OnChampionLeave(Champion champion) {
         Debug.Log("OnChampionLeave");
         championOnThisQuad = null;
+        node.walkable = true;
     }
     public void EnableEmissionShader(bool enable) {
         if(enable) {
