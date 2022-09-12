@@ -26,6 +26,7 @@ public class GameManager : SingletonManager<GameManager> {
     public StateMachine<GameState, string> GameManagerStateMachine => gameManagerStateMachine;
     public StateMachine<GameState, OnPlayState, string> PlayState  => playState;
     public static bool isPlayStateStart;//游戏是否开始了
+    public bool isInCombat => playState.ActiveState.name == OnPlayState.COMBAT;
     private int roundCount;
     public int RoundCount => roundCount;
     [SerializeField]
