@@ -93,7 +93,9 @@ public class Champion : MonoBehaviour {//棋子类,
             currentLevel = level;
         }        
         if(defaultChampionStats != null) {
-            currentChampionStats = new ChampionStats(defaultChampionStats,currentLevel);
+            //currentChampionStats = new ChampionStats(defaultChampionStats,currentLevel);
+            currentChampionStats = (ChampionStats)ScriptableObject.CreateInstance("ChampionStats");
+            currentChampionStats.CopyChampionStats(defaultChampionStats,currentLevel);
         }
         InitFSM();
         OnEnterQuad(quadToStay);
@@ -146,6 +148,18 @@ public class Champion : MonoBehaviour {//棋子类,
         lastMouseHoveringQuad = quad;
         currentMouseHoveringQuad = quad;
     }
+    public void MoveToNewQuad(Vector3 target,float speed) {
+        transform.position = Vector3.MoveTowards(transform.position,target,speed * Time.deltaTime);
+        transform.LookAt(target);
+        if(Vector3.Distance(transform.position,target) <= float.Epsilon) {
+            Quad quad = QuadsManager.Instance.GetCombatQuadByPostion(target);
+            if(quad != null) {
+                lastQuadThisChampionStand.OnChampionLeave(this);
+                quad.OnChampionStay(this);
+                lastQuadThisChampionStand = quad;
+            }
+        }
+    }
     private void OnMouseDrag() {
         // Debug.Log(Input.mousePosition);
         // Debug.Log(Camera.main.ScreenToWorldPoint(Input.mousePosition));
@@ -159,7 +173,7 @@ public class Champion : MonoBehaviour {//棋子类,
         temp.y = QuadsManager.Instance.CurrentMap.OriginPoint.y;
         transform.position = temp;
         //还要通过quadmanager知道当前对应的quad,调用高亮和退出的方法
-        currentMouseHoveringQuad = QuadsManager.Instance.GetQuadByPosition(transform.position);
+        currentMouseHoveringQuad = QuadsManager.Instance.GetAllyQuadByPosition(transform.position);
         if(currentMouseHoveringQuad == null && lastMouseHoveringQuad != null) {
             //应该让英雄停留在上个格子
             transform.position = lastMouseHoveringQuad.node.worldPosition;
@@ -260,12 +274,13 @@ public class Champion : MonoBehaviour {//棋子类,
             EnemyChampionManager.Instance.UnregisterChampion(this);
         }
     }
-    public Vector3 GetNearestOpponentChampionPos() {
+    public Vector3 GetNearestOpponentChampionPos(out Champion targetChampion) {
+        targetChampion = null;
         Vector3 result = Vector3.zero;
         if(isAllyChampion) {
-           result = EnemyChampionManager.Instance.GetNearestOpponentChampion(this);
+           result = EnemyChampionManager.Instance.GetNearestOpponentChampion(this,out targetChampion);
         }else {
-           result = AllyChampionManager.Instance.GetNearestOpponentChampion(this);
+           result = AllyChampionManager.Instance.GetNearestOpponentChampion(this,out targetChampion);
         }
         return result;
     }
@@ -366,9 +381,14 @@ public class ChampionWalk: StateBase<ChampionState> {
     Vector3[] path;
     int targetIndex;
     float speed = 1;
+    MonoBehaviour mono;
+    Champion targetChampion;
+    Action attackTrigger;
     public ChampionWalk(Champion champion, Animator animator,Action trigger, bool needsExitTime) : base(needsExitTime) {
+        mono = champion;
         this.champion = champion;
         this.animator = animator;
+        attackTrigger = trigger;
     }
     public override void OnEnter() {
         //战斗开始的时候会进来,这里首先应该判断是否有怪可以攻击
@@ -376,16 +396,51 @@ public class ChampionWalk: StateBase<ChampionState> {
         animator.SetTrigger("Walk");
         //需要请求一个寻路,需要知道终点是啥
         //对于ally来说,终点应该是离自己最近的enemy,反之亦然
-        Debug.Log("最近的距离是 " + champion.GetNearestOpponentChampionPos());
+        Vector3 target = champion.GetNearestOpponentChampionPos(out targetChampion);
+        Debug.Log("起点是: " +champion.transform.position + "终点是 " + target);
+        PathRequestManager.RequestPath(champion.transform.position,target,OnPathFound);
     }
     public override void OnLogic() {
         
+
     }
     public override void OnExit() {
         animator.ResetTrigger("Walk");
     }
     public void OnPathFound(Vector3[] newPath, bool pathSuccessful) {
         //寻路寻到了就开始走
+        Debug.Log("路寻到了吗" + pathSuccessful);
+        if(pathSuccessful) {
+            path = newPath;
+            mono.StopCoroutine(FollowPath());
+            mono.StartCoroutine(FollowPath());
+        }
+    }
+    IEnumerator FollowPath() {
+        if(path.Length > 0) {
+            Vector3 currentWayPoint = path[0];
+            while(true) {
+                if(champion.transform.position == currentWayPoint) {
+                    targetIndex ++;
+                    if(targetIndex >= path.Length) {//大于等于说明超出范围了
+                        yield break;//中止协程
+                    }
+                    currentWayPoint = path[targetIndex];
+                    if(Vector3.Distance(targetChampion.transform.position,champion.transform.position) 
+                    <= champion.currentChampionStats.attackRange * MapManager.Instance.CurrentMapConfiguration.ScaleRatio) {
+                        Debug.Log("那么就说明我找到我要打的敌人了");
+                        animator.SetTrigger("Attack");
+                        attackTrigger?.Invoke();
+                        yield break;
+                    }
+                }
+                //那么这里就要移动这个unit,
+                //transform.position = Vector3.MoveTowards(transform.position,currentWayPoint,speed * Time.deltaTime);
+                champion.MoveToNewQuad(currentWayPoint,speed);
+                yield return null;
+            }
+        }
+
     }
 }
 public class ChampionAttack: StateBase<ChampionState> {
