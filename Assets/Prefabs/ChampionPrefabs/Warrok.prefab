@@ -1547,7 +1547,11 @@ MonoBehaviour:
   championName: Warrok
   tier: 1
   defaultCost: 1
+  defaultLevel: 0
+  space: 0
   isAllyChampion: 0
+  defaultChampionStats: {fileID: 11400000, guid: de43cf8f81868bb499717fb7c43dcf1a,
+    type: 2}
   currentChampionStats: {fileID: 0}
   championAbility: {fileID: 0}
 --- !u!1 &5311661663020107965

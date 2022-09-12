@@ -1319,7 +1319,11 @@ MonoBehaviour:
   championName: Zombie
   tier: 2
   defaultCost: 2
+  defaultLevel: 0
+  space: 0
   isAllyChampion: 0
+  defaultChampionStats: {fileID: 11400000, guid: c8f9ae386e8fa0449917fffb92dfac34,
+    type: 2}
   currentChampionStats: {fileID: 0}
   championAbility: {fileID: 0}
 --- !u!1 &5351654494368477343

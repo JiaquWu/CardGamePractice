@@ -978,7 +978,11 @@ MonoBehaviour:
   championName: Maria
   tier: 2
   defaultCost: 2
+  defaultLevel: 0
+  space: 0
   isAllyChampion: 0
+  defaultChampionStats: {fileID: 11400000, guid: 3b981a1449057114a8aef46669af77c5,
+    type: 2}
   currentChampionStats: {fileID: 0}
   championAbility: {fileID: 0}
 --- !u!1 &2748835123711913492

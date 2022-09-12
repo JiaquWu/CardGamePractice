@@ -10,17 +10,20 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 265e82d7e5e80654b8db3816828d105a, type: 3}
-  m_Name: ChampionStats
+  m_Name: Mutant
   m_EditorClassIdentifier: 
-  championName: 
+  championName: Mutant
   healthPoints: 0
-  maxHealthPointsList: 
+  maxHealthPointsList: 000000000000000000000000
   manaPoints: 0
-  maxManaPointsList: 
-  attackDamageList: 
-  criticalChance: 1
-  criticalChanceList: []
-  criticalDamage: 3
+  maxManaPointsList: 000000000000000000000000
+  attackDamageList: 000000000000000000000000
+  criticalChance: 0
+  criticalChanceList:
+  - 0
+  - 0
+  - 0
+  criticalDamage: 0
   attackRange: 1
-  ArmorList: 
-  MagicResistanceList: 
+  ArmorList: 000000000000000000000000
+  MagicResistanceList: 000000000000000000000000

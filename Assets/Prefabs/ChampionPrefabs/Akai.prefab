@@ -830,7 +830,11 @@ MonoBehaviour:
   championName: Akai
   tier: 3
   defaultCost: 3
+  defaultLevel: 0
+  space: 0
   isAllyChampion: 0
+  defaultChampionStats: {fileID: 11400000, guid: 806e7437b42a2754981791bd402102d1,
+    type: 2}
   currentChampionStats: {fileID: 0}
   championAbility: {fileID: 0}
 --- !u!1 &2764755968237206688

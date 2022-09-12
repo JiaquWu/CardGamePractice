@@ -1348,7 +1348,11 @@ MonoBehaviour:
   championName: Mutant
   tier: 1
   defaultCost: 1
+  defaultLevel: 0
+  space: 0
   isAllyChampion: 0
+  defaultChampionStats: {fileID: 11400000, guid: 58fa62242a4ba9045ab669e4f7b21c1e,
+    type: 2}
   currentChampionStats: {fileID: 11400000, guid: fd89026682560014496353253e6774ac,
     type: 2}
   championAbility: {fileID: 11400000, guid: 1a4557ab84823bc458331b14c1ed420f, type: 2}
