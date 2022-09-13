@@ -148,16 +148,30 @@ public class Champion : MonoBehaviour {//棋子类,
         lastMouseHoveringQuad = quad;
         currentMouseHoveringQuad = quad;
     }
-    public void MoveToNewQuad(Vector3 target,float speed) {
-        transform.position = Vector3.MoveTowards(transform.position,target,speed * Time.deltaTime);
-        transform.LookAt(target);
+    public void MoveToNewQuad(Vector3 target,float speed,Champion targetChampion,ref bool isWalking,Action findNewPathFunc,Action triggerAttackFunc) {       
         if(Vector3.Distance(transform.position,target) <= float.Epsilon) {
-            Quad quad = QuadsManager.Instance.GetCombatQuadByPostion(target);
-            if(quad != null) {
-                lastQuadThisChampionStand.OnChampionLeave(this);
-                quad.OnChampionStay(this);
-                lastQuadThisChampionStand = quad;
+            //说明champion的位置到了新的一格,先判断攻击有没有被触发,没有的话就再重新再寻一次路
+            if(Vector3.Distance(targetChampion.transform.position,transform.position) 
+            <= currentChampionStats.attackRange * MapManager.Instance.CurrentMapConfiguration.ScaleRatio) {
+                transform.LookAt(target);
+                triggerAttackFunc?.Invoke();
+                isWalking = false;
+            }else {
+                findNewPathFunc?.Invoke();
+                //可能出现距离还不够,但是找不到路了?
             }
+        }else {
+            transform.position = Vector3.MoveTowards(transform.position,target,speed * Time.deltaTime);
+            transform.LookAt(target); 
+        }
+    }
+    public void QuadStateChange(Vector3 target) {
+        Debug.Log("quad的状态改变了一次");
+        Quad quad = QuadsManager.Instance.GetCombatQuadByPostion(target);
+        if(quad != null) {
+            lastQuadThisChampionStand.OnChampionLeave(this);
+            quad.OnChampionStay(this);
+            lastQuadThisChampionStand = quad;
         }
     }
     private void OnMouseDrag() {
@@ -384,6 +398,7 @@ public class ChampionWalk: StateBase<ChampionState> {
     MonoBehaviour mono;
     Champion targetChampion;
     Action attackTrigger;
+    bool isWalking;
     public ChampionWalk(Champion champion, Animator animator,Action trigger, bool needsExitTime) : base(needsExitTime) {
         mono = champion;
         this.champion = champion;
@@ -396,9 +411,7 @@ public class ChampionWalk: StateBase<ChampionState> {
         animator.SetTrigger("Walk");
         //需要请求一个寻路,需要知道终点是啥
         //对于ally来说,终点应该是离自己最近的enemy,反之亦然
-        Vector3 target = champion.GetNearestOpponentChampionPos(out targetChampion);
-        Debug.Log("起点是: " +champion.transform.position + "终点是 " + target);
-        PathRequestManager.RequestPath(champion.transform.position,target,OnPathFound);
+        FindPathTowardsNearestOpponent();
     }
     public override void OnLogic() {
         
@@ -416,31 +429,65 @@ public class ChampionWalk: StateBase<ChampionState> {
             mono.StartCoroutine(FollowPath());
         }
     }
+    public void FindPathTowardsNearestOpponent() {
+        Vector3 target = champion.GetNearestOpponentChampionPos(out targetChampion);
+        Debug.Log("起点是: " +champion.transform.position + "终点是 " + target);
+        PathRequestManager.RequestPath(champion.transform.position,target,OnPathFound);
+    }
+    public void TriggerAttackBehavior() {
+        Debug.Log("那么就说明我找到我要打的敌人了");
+        animator.SetTrigger("Attack");
+        attackTrigger?.Invoke();
+    }
     IEnumerator FollowPath() {
+        //不应该这么写
+        //逻辑应该是这样的:
+        //找到路之后,我先标记我要走的格子walkable = false
+        //然后标记我脚下的格子walkable = true
+        //然后走到下一格之后,重新寻路,再来一次
         if(path.Length > 0) {
             Vector3 currentWayPoint = path[0];
+            champion.QuadStateChange(currentWayPoint);//执行一次,改quad的状态
+            // while(true) {
+            //     if(champion.transform.position == currentWayPoint) {
+            //         targetIndex ++;
+            //         if(targetIndex >= path.Length) {//大于等于说明超出范围了
+            //             yield break;//中止协程
+            //         }
+            //         currentWayPoint = path[targetIndex];
+            //         if(Vector3.Distance(targetChampion.transform.position,champion.transform.position) 
+            //         <= champion.currentChampionStats.attackRange * MapManager.Instance.CurrentMapConfiguration.ScaleRatio) {
+            //             Debug.Log("那么就说明我找到我要打的敌人了");
+            //             animator.SetTrigger("Attack");
+            //             attackTrigger?.Invoke();
+            //             yield break;
+            //         }
+            //     }
+            //     //那么这里就要移动这个unit,
+            //     //transform.position = Vector3.MoveTowards(transform.position,currentWayPoint,speed * Time.deltaTime);
+            //     champion.MoveToNewQuad(currentWayPoint,speed);
+            //     yield return null;
+            // }
             while(true) {
                 if(champion.transform.position == currentWayPoint) {
-                    targetIndex ++;
-                    if(targetIndex >= path.Length) {//大于等于说明超出范围了
-                        yield break;//中止协程
-                    }
-                    currentWayPoint = path[targetIndex];
-                    if(Vector3.Distance(targetChampion.transform.position,champion.transform.position) 
+                    //说明champion的位置到了新的一格,先判断攻击有没有被触发,没有的话就再重新再寻一次路
+                    if(Vector3.Distance(currentWayPoint,champion.transform.position) 
                     <= champion.currentChampionStats.attackRange * MapManager.Instance.CurrentMapConfiguration.ScaleRatio) {
-                        Debug.Log("那么就说明我找到我要打的敌人了");
-                        animator.SetTrigger("Attack");
-                        attackTrigger?.Invoke();
-                        yield break;
+                        champion.transform.LookAt(currentWayPoint);
+                        TriggerAttackBehavior();
+                    }else {
+                        FindPathTowardsNearestOpponent();
+                        //可能出现距离还不够,但是找不到路了?
                     }
+                    yield break;
+                }else {
+                    champion.transform.position = Vector3.MoveTowards(champion.transform.position,currentWayPoint,speed * Time.deltaTime);
+                    champion.transform.LookAt(currentWayPoint);
+                    yield return null;
                 }
-                //那么这里就要移动这个unit,
-                //transform.position = Vector3.MoveTowards(transform.position,currentWayPoint,speed * Time.deltaTime);
-                champion.MoveToNewQuad(currentWayPoint,speed);
-                yield return null;
+                //champion.MoveToNewQuad(currentWayPoint,speed,targetChampion,ref isWalking,()=>FindPathTowardsNearestOpponent(),()=>TriggerAttackBehavior());
             }
         }
-
     }
 }
 public class ChampionAttack: StateBase<ChampionState> {
