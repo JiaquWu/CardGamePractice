@@ -55,8 +55,8 @@ where T:ChampionManagerBase<T> {
         Vector3 temp = Vector3.positiveInfinity;
         for (int i = 0; i < championsDict.Count; i++) {
             for (int j = 0; j < championsDict.ElementAt(i).Value.Count; j++) {
-                if(Vector3.Distance(championsDict.ElementAt(i).Value[j].transform.position,champion.transform.position) 
-                < Vector3.Distance(temp,champion.transform.position)) {
+                if(Vector3.Distance(championsDict.ElementAt(i).Value[j].LastQuadThisChampionStand.node.worldPosition,champion.LastQuadThisChampionStand.node.worldPosition) 
+                < Vector3.Distance(temp,champion.LastQuadThisChampionStand.node.worldPosition)) {
                     //temp = championsDict.ElementAt(i).Value[j].transform.position;
                     temp = championsDict.ElementAt(i).Value[j].LastQuadThisChampionStand.node.worldPosition;
                     //这里还要做一件事,由于champion会移动,它的位置可能和quad位置不一样,但算法需要的是quad的位置,因此需要得出离这个点最近的quad
