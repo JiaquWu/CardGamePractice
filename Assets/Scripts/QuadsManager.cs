@@ -279,8 +279,8 @@ public class QuadsManager : SingletonManager<QuadsManager> {
     }
     Vector3[] SimplifyPath(List<Node> path) {//让node转化为道路的具体坐标点,其中相同方向的点会被忽略
         List<Vector3> waypoints = new List<Vector3>();
-        for (int i = 1; i < path.Count; i++) {//不简化的写法
-            waypoints.Add(path[i-1].worldPosition);
+        for (int i = 0; i < path.Count; i++) {//不简化的写法
+            waypoints.Add(path[i].worldPosition);//要把最后一个点放进去,因为现在最后一个点一开始就是not walkable的了,和之前不一样,所以最后一个点是champion要走的第一步!
         }
         // Vector2 directionOld = Vector2.zero;
 
