@@ -26,7 +26,7 @@ public class ChampionStats:ScriptableObject {//英雄数据,暂时还是用scrip
     [Range(1,3)]
     public float criticalDamage;//暴击伤害
     [Range(1,8)]
-    public int attackRange;//攻击距离
+    public float attackRange;//攻击距离
     [HideInInspector]
     public int Armor{get;private set;}//护甲
     public List<int> ArmorList;
