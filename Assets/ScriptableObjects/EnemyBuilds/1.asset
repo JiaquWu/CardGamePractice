@@ -15,9 +15,21 @@ MonoBehaviour:
   enmiesInOneTurn:
   - enemyGameObject: {fileID: 5145533589597435818, guid: e7b1f40d39f4fe840b4987a2b77dee83,
       type: 3}
-    quadToStayCoordinate: {x: 0, y: 8}
+    quadToStayCoordinate: {x: 0, y: 6}
     level: 0
   - enemyGameObject: {fileID: 8896579308038108716, guid: 2f82dd61b66209f4c9a3b20c7e02d899,
       type: 3}
-    quadToStayCoordinate: {x: 1, y: 8}
+    quadToStayCoordinate: {x: 1, y: 6}
     level: 0
+  - enemyGameObject: {fileID: 2709490954834452475, guid: 298c305ce2b393a478100fe80eeb1230,
+      type: 3}
+    quadToStayCoordinate: {x: 5, y: 8}
+    level: 0
+  - enemyGameObject: {fileID: 5296387255904326596, guid: 7bb093cdff9ccc74c8df18de05ae1f70,
+      type: 3}
+    quadToStayCoordinate: {x: 6, y: 5}
+    level: 1
+  - enemyGameObject: {fileID: 2633152036119657008, guid: 6ebb54b92a943f7448939ccffe9bdd67,
+      type: 3}
+    quadToStayCoordinate: {x: 5, y: 5}
+    level: 1

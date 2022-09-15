@@ -24,6 +24,6 @@ MonoBehaviour:
   - 0
   - 0
   criticalDamage: 0
-  attackRange: 4
+  attackRange: 4.3
   ArmorList: 000000000000000000000000
   MagicResistanceList: 000000000000000000000000
