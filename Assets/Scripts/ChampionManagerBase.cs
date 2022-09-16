@@ -38,7 +38,7 @@ where T:ChampionManagerBase<T> {
             championsDict[champion.ChampionName].Remove(champion);
         }
     }
-    public Vector3 GetNearestOpponentChampion(Champion champion,out Champion targetChampion) {
+    public Vector3 GetNearestOpponentChampion(Champion champion,out Champion targetChampion, out bool isAChampionAvailable) {
         //将字典里面每个英雄位置和目标英雄计算得出最近的位置
         //下面两种方法不知道哪个快,下面一个方法的好处是可以out
         targetChampion = null;
@@ -52,12 +52,16 @@ where T:ChampionManagerBase<T> {
         // < Vector3.Distance(pos2,champion.transform.position)
         // ? pos1 : pos2);
         // return min;
+        isAChampionAvailable = false;
         Vector3 temp = Vector3.positiveInfinity;
         for (int i = 0; i < championsDict.Count; i++) {
             for (int j = 0; j < championsDict.ElementAt(i).Value.Count; j++) {
-                if(Vector3.Distance(championsDict.ElementAt(i).Value[j].LastQuadThisChampionStand.node.worldPosition,champion.LastQuadThisChampionStand.node.worldPosition) 
+                if(championsDict.ElementAt(i).Value[j].IsActive && Vector3.Distance(championsDict.ElementAt(i).Value[j].LastQuadThisChampionStand.node.worldPosition,champion.LastQuadThisChampionStand.node.worldPosition) 
                 < Vector3.Distance(temp,champion.LastQuadThisChampionStand.node.worldPosition)) {
                     //temp = championsDict.ElementAt(i).Value[j].transform.position;
+                    if(!isAChampionAvailable) {
+                        isAChampionAvailable = true;
+                    }
                     temp = championsDict.ElementAt(i).Value[j].LastQuadThisChampionStand.node.worldPosition;
                     //这里还要做一件事,由于champion会移动,它的位置可能和quad位置不一样,但算法需要的是quad的位置,因此需要得出离这个点最近的quad
                     //但其实不用计算最近的quad,只用看lastQuadStand就好了
