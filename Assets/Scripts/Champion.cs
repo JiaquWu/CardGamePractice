@@ -47,6 +47,8 @@ public class Champion : MonoBehaviour {//棋子类,
     private bool isMouseHoveringOnThisChampion;
     [SerializeField]
     private bool isAllyChampion;//true就是友方
+    public bool IsAllyChampion => isAllyChampion;
+    public bool IsActive;
     private StateMachine<ChampionState> championStateMachine = new StateMachine<ChampionState>();
     ChampionPrepare championPrepareState;
     ChampionIdle championIdleState;
@@ -257,11 +259,12 @@ public class Champion : MonoBehaviour {//棋子类,
     }
     public void InitFSM() {
         championPrepareState = new ChampionPrepare(Animator,false);
-        championIdleState = new ChampionIdle(Animator,false);
-        championWalkState = new ChampionWalk(this,Animator,(target)=>
-        {championAttackState.UpdateTargetChampion(target);championStateMachine.Trigger("Attack");}, false);
+        championIdleState = new ChampionIdle(this,Animator,false);
+        championWalkState = new ChampionWalk(this,Animator,(x)=>{CombatEnd(x);}, 
+        (target)=>{championAttackState.UpdateTargetChampion(target);
+        championStateMachine.Trigger("Attack");}, false);
         championAttackState = new ChampionAttack(this,Animator,false);
-        championDeadState = new ChampionDead(Animator,false);
+        championDeadState = new ChampionDead(this,Animator,false);
 
         championStateMachine.AddState(ChampionState.PREPARE,championPrepareState);
         championStateMachine.AddState(ChampionState.IDLE,championIdleState);//把所有要添加的state加入进来,把需要的参数传进去
@@ -271,6 +274,7 @@ public class Champion : MonoBehaviour {//棋子类,
 
         championStateMachine.AddTriggerTransition("BattleStart",ChampionState.IDLE,ChampionState.WALK);//战斗开始,开始行动
         championStateMachine.AddTriggerTransition("Attack",ChampionState.WALK,ChampionState.ATTACK);
+        championStateMachine.AddTriggerTransition("TargetDead",ChampionState.ATTACK,ChampionState.WALK);
         championStateMachine.AddTriggerTransition("OnPreparationQuad",ChampionState.IDLE,ChampionState.PREPARE);
         championStateMachine.AddTriggerTransition("OnDeployQuad",ChampionState.PREPARE,ChampionState.IDLE);
 
@@ -288,7 +292,7 @@ public class Champion : MonoBehaviour {//棋子类,
         //被传进来的champion平A打到了
         Debug.Log("被传进来的champion打了" + champion.championName);
         //具体要做什么事情呢,首先要计算出被打了多少
-        TakeDamage(DamageType.PHYSICS,champion.currentChampionStats.AttackDamage);
+        TakeDamage(champion,DamageType.PHYSICS,champion.currentChampionStats.AttackDamage);
     }
     public void GainMana(float amount) {
         currentChampionStats.manaPoints += amount;
@@ -301,7 +305,7 @@ public class Champion : MonoBehaviour {//棋子类,
         }
         UpdateManaBar?.Invoke(currentChampionStats.manaPoints);
     }
-    public void TakeDamage(DamageType damageType,float damage) {
+    public void TakeDamage(Champion damageSource, DamageType damageType,float damage) {
         //本质上我要damagehandler告诉我到底要掉多少血
         float result = this.CalculateDamage(damageType,damage);
         Debug.Log("到底掉了多少血? " + result);
@@ -309,14 +313,24 @@ public class Champion : MonoBehaviour {//棋子类,
         currentChampionStats.healthPoints -= result;
         if(currentChampionStats.healthPoints <= 0) {
             OnDead();
-
+            //伤害来源的英雄要知道这件事情
+            damageSource.OnTargetDead();
         }else {
             GainMana(Mathf.CeilToInt(result / currentChampionStats.ManaGainedByTakingDamage));
             UpdateHealthBar?.Invoke(currentChampionStats.healthPoints);
         }
     }
     public void OnDead() {
-
+        championStateMachine.Trigger("Dead");
+        //除了自己死了,打我的champion也要知道这件事情
+    }
+    public void OnTargetDead() {
+        Debug.Log("????????????????");
+        championStateMachine.Trigger("TargetDead");
+    }
+    public void CombatEnd(bool isAllyWin) {
+        //有一方死光了
+        Debug.Log("谁赢了" + isAllyWin);
     }
     public void OnEnterDeployState(GameEventTypeVoid ev) {
         if(lastQuadThisChampionStand is DeployQuad) {
@@ -348,13 +362,13 @@ public class Champion : MonoBehaviour {//棋子类,
             EnemyChampionManager.Instance.UnregisterChampion(this);
         }
     }
-    public Vector3 GetNearestOpponentChampionPos(out Champion targetChampion) {
+    public Vector3 GetNearestOpponentChampionPos(out Champion targetChampion,out bool isAChampionAvailable) {
         targetChampion = null;
         Vector3 result = Vector3.zero;
         if(isAllyChampion) {
-           result = EnemyChampionManager.Instance.GetNearestOpponentChampion(this,out targetChampion);
+           result = EnemyChampionManager.Instance.GetNearestOpponentChampion(this,out targetChampion,out isAChampionAvailable);
         }else {
-           result = AllyChampionManager.Instance.GetNearestOpponentChampion(this,out targetChampion);
+           result = AllyChampionManager.Instance.GetNearestOpponentChampion(this,out targetChampion, out isAChampionAvailable);
         }
         return result;
     }
@@ -388,7 +402,7 @@ public class Champion : MonoBehaviour {//棋子类,
         //要判断英雄如果是在deploy区域,那么space会减少
         _champion.lastQuadThisChampionStand.OnChampionLeave(_champion);
         if(_champion.lastQuadThisChampionStand is DeployQuad) {
-            if(_champion.isAllyChampion) {//目前enemy先不管
+            if(_champion.IsAllyChampion) {//目前enemy先不管
                 AllyChampionManager.Instance.OnSpaceChange(_champion.Space * -1);
             }
         }
@@ -418,12 +432,16 @@ public class ChampionAbility:ScriptableObject {//每个英雄的大招不一样
 
 public class ChampionIdle : StateBase<ChampionState> {//idle是已经在场上了,prepare是还在下面,播放动画都是idle,但是性质不一样
     Animator animator;
-    public ChampionIdle(Animator animator, bool needsExitTime) : base(needsExitTime) {
+    Champion champion;
+    public ChampionIdle(Champion champion, Animator animator, bool needsExitTime) : base(needsExitTime) {
         this.animator = animator;
+        this.champion = champion;
     }
     public override void OnEnter() {
         Debug.Log("DeployQuad");
         animator.SetTrigger("Idle");
+        champion.IsActive = true;
+        //如果棋子已经死亡,那么就
     }
     public override void OnLogic() {
         Debug.Log("DeployQuadOnLogic");
@@ -458,12 +476,15 @@ public class ChampionWalk: StateBase<ChampionState> {
     MonoBehaviour mono;
     Champion targetChampion;
     Action<Champion> attackTrigger;
+    Action<bool> combatEndTrigger;
     bool isWalking;
-    public ChampionWalk(Champion champion, Animator animator,Action<Champion> trigger, bool needsExitTime) : base(needsExitTime) {
+    bool isAChampionAvailable;
+    public ChampionWalk(Champion champion, Animator animator,Action<bool> combatEndTrigger, Action<Champion> attackTrigger, bool needsExitTime) : base(needsExitTime) {
         mono = champion;
         this.champion = champion;
         this.animator = animator;
-        attackTrigger = trigger;
+        this.attackTrigger = attackTrigger;
+        this.combatEndTrigger = combatEndTrigger;
     }
     public override void OnEnter() {
         //战斗开始的时候会进来,这里首先应该判断是否有怪可以攻击
@@ -489,18 +510,24 @@ public class ChampionWalk: StateBase<ChampionState> {
         }
     }
     public void CheckNearestOpponent() {
-        Vector3 target = champion.GetNearestOpponentChampionPos(out targetChampion);
-        if(Vector3.Distance(target,champion.transform.position) 
-        <= champion.CurrentChampionStats.attackRange * MapManager.Instance.CurrentMapConfiguration.ScaleRatio) {
-            champion.transform.LookAt(targetChampion.transform);
-            TriggerAttackBehavior();
-        }else {
-            FindPathTowardsNearestOpponent();
+        Vector3 target = champion.GetNearestOpponentChampionPos(out targetChampion,out isAChampionAvailable);
+        if(isAChampionAvailable) {
+            if(Vector3.Distance(target,champion.transform.position) 
+            <= champion.CurrentChampionStats.attackRange * MapManager.Instance.CurrentMapConfiguration.ScaleRatio) {
+                champion.transform.LookAt(targetChampion.transform);
+                TriggerAttackBehavior();
+            }else {
+                FindPathTowardsNearestOpponent();
             //可能出现距离还不够,但是找不到路了?
+            }
+        }else {
+            //如果进walk状态了但是没有英雄能打了,就说明所有英雄都g了,就说明出结果了,
+            combatEndTrigger?.Invoke(champion.IsAllyChampion);
         }
+        
     }
     public void FindPathTowardsNearestOpponent() {
-        Vector3 target = champion.GetNearestOpponentChampionPos(out targetChampion);
+        Vector3 target = champion.GetNearestOpponentChampionPos(out targetChampion, out isAChampionAvailable);
         Debug.Log("起点是: " +champion.transform.position + "终点是 " + target);
         PathRequestManager.RequestPath(champion.transform.position,target,OnPathFound);
     }
@@ -563,11 +590,14 @@ public class ChampionAttack: StateBase<ChampionState> {
 }
 public class ChampionDead: StateBase<ChampionState> {
     private Animator animator;
-    public ChampionDead(Animator animator,bool needsExitTime) : base(needsExitTime) {
+    private Champion champion;
+    public ChampionDead(Champion champion, Animator animator,bool needsExitTime) : base(needsExitTime) {
         this.animator = animator;
+        this.champion = champion;
     }
     public override void OnEnter() {
-        
+        champion.gameObject.SetActive(false);
+        champion.IsActive = false;
     }
     public override void OnLogic() {
         
