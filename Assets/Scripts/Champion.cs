@@ -64,8 +64,20 @@ public class Champion : MonoBehaviour {//棋子类,
     }
     [SerializeField]//这个要自己配好
     private ChampionStats defaultChampionStats;//默认的英雄数值,但是怎么合理配置呢?
+    private ChampionStats currentChampionStats;
     [HideInInspector]
-    public ChampionStats currentChampionStats;//当前英雄数值
+    public ChampionStats CurrentChampionStats {
+        get {
+            if(currentChampionStats != null) return currentChampionStats;
+            if(defaultChampionStats != null) {
+                //currentChampionStats = new ChampionStats(defaultChampionStats,currentLevel);
+                currentChampionStats = (ChampionStats)ScriptableObject.CreateInstance("ChampionStats");
+                currentChampionStats.CopyChampionStats(defaultChampionStats,currentLevel);
+                return currentChampionStats;
+            }
+            return null;
+        }
+    }//当前英雄数值
     private List<TraitBase> traits = new List<TraitBase>();//一个英雄拥有的所有羁绊
     public ChampionAbility championAbility;
 
@@ -75,6 +87,8 @@ public class Champion : MonoBehaviour {//棋子类,
     Quad lastMouseHoveringQuad = null;//这个变量和currentMouseHoveringQuad在鼠标拖拽过程中会变化
     Quad currentMouseHoveringQuad = null;
 
+    public event Action<float> UpdateHealthBar;
+    public event Action<float> UpdateManaBar;
     private void Update() {
         if(championStateMachine != null) {//for testing
             championStateMachine.OnLogic();
@@ -97,11 +111,7 @@ public class Champion : MonoBehaviour {//棋子类,
         }else {
             currentLevel = level;
         }        
-        if(defaultChampionStats != null) {
-            //currentChampionStats = new ChampionStats(defaultChampionStats,currentLevel);
-            currentChampionStats = (ChampionStats)ScriptableObject.CreateInstance("ChampionStats");
-            currentChampionStats.CopyChampionStats(defaultChampionStats,currentLevel);
-        }
+        
         InitFSM();
         OnEnterQuad(quadToStay);
         GameEventsManager.StartListening(GameEventTypeVoid.ENTER_DEPLOY_STATE,OnEnterDeployState);
@@ -250,7 +260,7 @@ public class Champion : MonoBehaviour {//棋子类,
         championIdleState = new ChampionIdle(Animator,false);
         championWalkState = new ChampionWalk(this,Animator,(target)=>
         {championAttackState.UpdateTargetChampion(target);championStateMachine.Trigger("Attack");}, false);
-        championAttackState = new ChampionAttack(Animator,false);
+        championAttackState = new ChampionAttack(this,Animator,false);
         championDeadState = new ChampionDead(Animator,false);
 
         championStateMachine.AddState(ChampionState.PREPARE,championPrepareState);
@@ -275,7 +285,38 @@ public class Champion : MonoBehaviour {//棋子类,
         championAttackState.HitTarget();
     }
     public void OnHit(Champion champion) {
-        //被传进来的champion打了,要掉血啥的
+        //被传进来的champion平A打到了
+        Debug.Log("被传进来的champion打了" + champion.championName);
+        //具体要做什么事情呢,首先要计算出被打了多少
+        TakeDamage(DamageType.PHYSICS,champion.currentChampionStats.AttackDamage);
+    }
+    public void GainMana(float amount) {
+        currentChampionStats.manaPoints += amount;
+        //每次回蓝都要判断蓝量满了没有,如果有,就要放技能!
+        if(currentChampionStats.manaPoints >= currentChampionStats.MaxManaPoints) {
+            if(championAbility != null) {
+                championAbility.Execute();
+            }
+            currentChampionStats.manaPoints = 0;
+        }
+        UpdateManaBar?.Invoke(currentChampionStats.manaPoints);
+    }
+    public void TakeDamage(DamageType damageType,float damage) {
+        //本质上我要damagehandler告诉我到底要掉多少血
+        float result = this.CalculateDamage(damageType,damage);
+        Debug.Log("到底掉了多少血? " + result);
+        //然后这个结果怎么用呢?首先要计算当前血量,如果死了,触发死亡函数,如果没死,告诉UI
+        currentChampionStats.healthPoints -= result;
+        if(currentChampionStats.healthPoints <= 0) {
+            OnDead();
+
+        }else {
+            GainMana(Mathf.CeilToInt(result / currentChampionStats.ManaGainedByTakingDamage));
+            UpdateHealthBar?.Invoke(currentChampionStats.healthPoints);
+        }
+    }
+    public void OnDead() {
+
     }
     public void OnEnterDeployState(GameEventTypeVoid ev) {
         if(lastQuadThisChampionStand is DeployQuad) {
@@ -450,7 +491,7 @@ public class ChampionWalk: StateBase<ChampionState> {
     public void CheckNearestOpponent() {
         Vector3 target = champion.GetNearestOpponentChampionPos(out targetChampion);
         if(Vector3.Distance(target,champion.transform.position) 
-        <= champion.currentChampionStats.attackRange * MapManager.Instance.CurrentMapConfiguration.ScaleRatio) {
+        <= champion.CurrentChampionStats.attackRange * MapManager.Instance.CurrentMapConfiguration.ScaleRatio) {
             champion.transform.LookAt(targetChampion.transform);
             TriggerAttackBehavior();
         }else {
@@ -497,14 +538,18 @@ public class ChampionWalk: StateBase<ChampionState> {
 public class ChampionAttack: StateBase<ChampionState> {
     private Animator animator;
     private Champion targetChampion;
-    public ChampionAttack(Animator animator, bool needsExitTime) : base(needsExitTime) {
+    private Champion champion;
+    public ChampionAttack(Champion champion, Animator animator, bool needsExitTime) : base(needsExitTime) {
         this.animator = animator;
+        this.champion = champion;
     }
     public void UpdateTargetChampion(Champion target) {
         targetChampion = target;
     }
     public void HitTarget() {
         //champion的动画判断出champion打到人了,具体逻辑在这里执行
+        targetChampion.OnHit(champion);
+        champion.GainMana(champion.CurrentChampionStats.ManaGainedPerAttack);
     }
     public override void OnEnter() {
         Debug.Log("这里英雄开始和它战斗了" + targetChampion.ChampionName);
