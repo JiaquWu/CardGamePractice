@@ -177,7 +177,12 @@ public class QuadsManager : SingletonManager<QuadsManager> {
         int x = Mathf.CeilToInt(quadSizeX * percentX) - 1;//这里是推算出来的要ceil,先算出百分比,ceil是因为最大7.5,7.0到7.5都是第八格,然后因为index要-1
         int y = Mathf.CeilToInt(quadSizeY * percentY) - 1;//同理,因为这里quadSizeY是8,所以一样的
         //UnityEngine.Debug.Log("坐标是: " + new Vector2(x,y));
-        return grid[x,y];
+        if(x < grid.GetLength(0) && y < grid.GetLength(1)) {
+            return grid[x,y];
+        }else {
+            return null;
+        }
+        
     }
     public Quad QuadFromNode(Node node) {
         Vector2 coordinate = CurrentMap.AStarCoordinateToCoordinate(new Vector2(node.gridX,node.gridY));
@@ -208,6 +213,7 @@ public class QuadsManager : SingletonManager<QuadsManager> {
         bool pathSuccess = false;
         Node startNode = NodeFromWorldPoint(startPos);
         Node targetNode = NodeFromWorldPoint(targetPos);
+        if(startNode == null || targetNode == null) yield break;
         //if(!startNode.walkable || !targetNode.walkable) yield return null;
         Heap<Node> openSet = new Heap<Node>(MaxSize);
         //List<Node> openSet = new List<Node>();
