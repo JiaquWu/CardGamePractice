@@ -14,10 +14,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   championName: Maria
   healthPoints: 0
-  maxHealthPointsList: 000000000000000000000000
+  maxHealthPointsList:
+  - 600
+  - 700
+  - 0
   manaPoints: 0
-  maxManaPointsList: 000000000000000000000000
-  attackDamageList: 000000000000000000000000
+  DefautManaPoints: 20
+  maxManaPointsList:
+  - 80
+  - 80
+  - 0
+  attackDamageList:
+  - 60
+  - 80
+  - 0
   criticalChance: 0
   criticalChanceList:
   - 0
@@ -25,5 +35,13 @@ MonoBehaviour:
   - 0
   criticalDamage: 0
   attackRange: 1.42
-  ArmorList: 000000000000000000000000
-  MagicResistanceList: 000000000000000000000000
+  ArmorList:
+  - 30
+  - 40
+  - 0
+  MagicResistanceList:
+  - 30
+  - 40
+  - 0
+  ManaGainedPerAttack: 5
+  ManaGainedByTakingDamage: 10
