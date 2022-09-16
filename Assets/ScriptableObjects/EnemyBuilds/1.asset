@@ -21,7 +21,7 @@ MonoBehaviour:
       type: 3}
     quadToStayCoordinate: {x: 1, y: 6}
     level: 0
-  - enemyGameObject: {fileID: 2709490954834452475, guid: 298c305ce2b393a478100fe80eeb1230,
+  - enemyGameObject: {fileID: 4710126444274945613, guid: bb58345f9ed0f4b4cbb22b501cf26f1f,
       type: 3}
     quadToStayCoordinate: {x: 5, y: 8}
     level: 0
