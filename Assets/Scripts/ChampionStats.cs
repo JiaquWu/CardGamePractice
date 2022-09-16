@@ -7,19 +7,19 @@ using UnityEngine;
 public class ChampionStats:ScriptableObject {//英雄数据,暂时还是用scriptableObject来保存吧,读表应该更好
     public string championName;
     [HideInInspector]
-    public int healthPoints;
+    public float healthPoints;
     [HideInInspector]
-    public int MaxHealthPoints{get;private set;}
-    public List<int> maxHealthPointsList;
+    public float MaxHealthPoints{get;private set;}
+    public List<float> maxHealthPointsList;
     [HideInInspector]
-    public int manaPoints;
-    public int DefautManaPoints{get;private set;}
+    public float manaPoints;
+    public float DefautManaPoints;
     [HideInInspector]
-    public int MaxManaPoints{get;private set;}
-    public List<int> maxManaPointsList;
+    public float MaxManaPoints{get;private set;}
+    public List<float> maxManaPointsList;
     [HideInInspector]
-    public int AttackDamage{get;private set;}
-    public List<int> attackDamageList;//攻击力
+    public float AttackDamage{get;private set;}
+    public List<float> attackDamageList;//攻击力
     [HideInInspector]
     public float criticalChance;//暴击率
     public List<float> criticalChanceList;//[Range(0,1)]
@@ -28,12 +28,13 @@ public class ChampionStats:ScriptableObject {//英雄数据,暂时还是用scrip
     [Range(1,8)]
     public float attackRange;//攻击距离
     [HideInInspector]
-    public int Armor{get;private set;}//护甲
-    public List<int> ArmorList;
+    public float Armor{get;private set;}//护甲
+    public List<float> ArmorList;
     [HideInInspector]
-    public int MagicResistance{get;private set;}//魔抗
-    public List<int> MagicResistanceList;
-
+    public float MagicResistance{get;private set;}//魔抗
+    public List<float> MagicResistanceList;
+    public float ManaGainedPerAttack;
+    public float ManaGainedByTakingDamage;//掉多少血会加1滴蓝
     // public ChampionStats(int healthPoints, int manaPoints, int attackDamage, float criticalChance, float criticalDamage, int attackRange) {
     //     this.healthPoints = healthPoints;
     //     this.manaPoints = manaPoints;
@@ -52,7 +53,10 @@ public class ChampionStats:ScriptableObject {//英雄数据,暂时还是用scrip
         this.attackRange = targetStats.attackRange;
         this.Armor = targetStats.ArmorList[level];
         this.MagicResistance = targetStats.MagicResistanceList[level];
+        this.ManaGainedPerAttack = targetStats.ManaGainedPerAttack;
+        this.ManaGainedByTakingDamage = targetStats.ManaGainedByTakingDamage;
         this.healthPoints = this.MaxHealthPoints;
+        this.manaPoints = this.DefautManaPoints;
     }
     public void UpdateStats(ChampionStats defaultStats,int championLevel) {
         this.MaxHealthPoints = defaultStats.maxHealthPointsList[championLevel];     
