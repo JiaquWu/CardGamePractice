@@ -70,6 +70,7 @@ public class AllyChampionManager : ChampionManagerBase<AllyChampionManager> {
             championLevel0[1].OnChampionUpgrade(0);
             championLevel0[2].OnChampionUpgrade(0);
             championLevel1.Add(championLevel0[0]);
+            GameEventsManager.TriggerEvent(GameEventTypeChampion.CHAMPION_UPGRADE_LEVEL_1,championLevel0[0]);
         }
         if(championLevel1 != null && championLevel1.Count >= 3) {
             championLevel1[0].OnChampionUpgrade(2);

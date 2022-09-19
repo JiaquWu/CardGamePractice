@@ -17,17 +17,17 @@ MonoBehaviour:
   maxHealthPointsList:
   - 500
   - 700
-  - 0
+  - 1000
   manaPoints: 0
   DefautManaPoints: 30
   maxManaPointsList:
   - 100
   - 100
-  - 0
+  - 100
   attackDamageList:
   - 50
   - 65
-  - 0
+  - 80
   criticalChance: 0
   criticalChanceList:
   - 0
@@ -38,10 +38,10 @@ MonoBehaviour:
   ArmorList:
   - 20
   - 30
-  - 0
+  - 40
   MagicResistanceList:
   - 20
   - 30
-  - 0
+  - 40
   ManaGainedPerAttack: 5
   ManaGainedByTakingDamage: 10

@@ -65,6 +65,8 @@ public class ChampionStats:ScriptableObject {//英雄数据,暂时还是用scrip
         this.criticalChance = defaultStats.criticalChanceList[championLevel];
         this.Armor = defaultStats.ArmorList[championLevel];
         this.MagicResistance = defaultStats.MagicResistanceList[championLevel];
+        this.healthPoints = this.MaxHealthPoints;
+        this.manaPoints = this.DefautManaPoints;
     }
 }
 

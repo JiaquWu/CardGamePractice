@@ -389,12 +389,14 @@ public class Champion : MonoBehaviour {//棋子类,
             currentCost = tier == 1? 3 : tier * 3 - 1;//一级卡两星卖三块,其余 -1
             Debug.Log("要升两星了");
             transform.localScale *= 1.2f;
+            currentChampionStats.UpdateStats(defaultChampionStats,1);
         }else if(level == 2) {
             currentLevel = 2;
             currentCost = tier == 1? 9 : tier * 9 - 5;//暂时-5试试
             Debug.Log("要升三星了");
             transform.localScale *= 1.2f;
             //升星之后就应该刷不出这个卡了.
+            currentChampionStats.UpdateStats(defaultChampionStats,2);
         }
     }
     public void OnSell(GameEventTypeChampion ev,Champion _champion) {

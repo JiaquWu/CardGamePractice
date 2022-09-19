@@ -6,6 +6,7 @@ using UnityEngine.Events;
 public enum GameEventTypeChampion {
     BUY_A_CHAMPION,
     SELL_A_CHAMPION,
+    CHAMPION_UPGRADE_LEVEL_1,
     CHAMPION_UPGRADE_LEVEL_2,
 }
 public enum GameEventTypeGameObject {

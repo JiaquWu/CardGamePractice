@@ -15,11 +15,18 @@ public class BarCanvas : MonoBehaviour {
         champion.UpdateManaBar += UpdateManaBarUI;
         UpdateHealthBarUI(champion.CurrentChampionStats.healthPoints);
         UpdateManaBarUI(champion.CurrentChampionStats.manaPoints);
-        transform.localScale = new Vector3((float)1 / transform.parent.localScale.x, (float)1 / transform.parent.localScale.y, (float)1 / transform.parent.localScale.z); 
+        GameEventsManager.StartListening(GameEventTypeChampion.CHAMPION_UPGRADE_LEVEL_1,UpdateUIScale);
+        GameEventsManager.StartListening(GameEventTypeChampion.CHAMPION_UPGRADE_LEVEL_2,UpdateUIScale);
+        transform.localScale = new Vector3((float)1 / champion.transform.localScale.x, (float)1 / champion.transform.localScale.y, (float)1 / champion.transform.localScale.z); 
     }
     private void LateUpdate() {
         transform.LookAt(transform.position + Camera.main.transform.forward * 10);
         //transform.Rotate(0,180,0);
+    }
+    private void UpdateUIScale(GameEventTypeChampion ev,Champion target) {
+        if(target == champion) {
+            transform.localScale = new Vector3((float)1 / target.transform.localScale.x, (float)1 / target.transform.localScale.y, (float)1 / target.transform.localScale.z); 
+        }
     }
     private void UpdateHealthBarUI(float hpAmount) {
         if(healthBar != null) {
@@ -34,5 +41,7 @@ public class BarCanvas : MonoBehaviour {
     private void OnDisable() {
         champion.UpdateHealthBar -= UpdateHealthBarUI;
         champion.UpdateManaBar -= UpdateManaBarUI;
+        GameEventsManager.StopListening(GameEventTypeChampion.CHAMPION_UPGRADE_LEVEL_1,UpdateUIScale);
+        GameEventsManager.StopListening(GameEventTypeChampion.CHAMPION_UPGRADE_LEVEL_2,UpdateUIScale);
     }
 }

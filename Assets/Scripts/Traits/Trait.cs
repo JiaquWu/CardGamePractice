@@ -4,11 +4,14 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-public class TraitBase  {//羁绊的基类
+public class TraitBase : ScriptableObject {//羁绊的基类
     public virtual string TriatName{get;protected set;} //羁绊名字
     protected virtual int ActivatedTraitsIndex {get; set;} = -1;//0就是激活了第一级羁绊
     protected Action<int> ActivateAdditionalEffect;//int是说第几级,英雄知道每级效果会给自己什么不同的额外效果.0是1级
     protected int[] amountToActivate;//激活羁绊所需要的英雄数量
+    public TraitBase() {
+        
+    }
     public TraitBase(Action<int> ActivateAdditionalEffect) {//创建对象的时候,把
         this.ActivateAdditionalEffect = ActivateAdditionalEffect;
         Init();
