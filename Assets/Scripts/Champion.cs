@@ -80,7 +80,8 @@ public class Champion : MonoBehaviour {//棋子类,
             return null;
         }
     }//当前英雄数值
-    private List<TraitBase> traits = new List<TraitBase>();//一个英雄拥有的所有羁绊
+    [SerializeField]
+    public List<TraitBase> traits = new List<TraitBase>();//一个英雄拥有的所有羁绊
     public ChampionAbility championAbility;
 
     protected ChampionState currentChampionState;
@@ -141,6 +142,8 @@ public class Champion : MonoBehaviour {//棋子类,
             if(lastQuadThisChampionStand == null || lastQuadThisChampionStand is PreparationQuad) {//如果是null,说明直接买进去,或者从下面上去
                 if(isAllyChampion) {
                     AllyChampionManager.Instance.OnSpaceChange(Space);
+                    //这里要检测羁绊的更新
+                    AllyChampionManager.Instance.UpdateCurrentTraits(this,true);
                 }
                 Debug.Log("说明成功从备战到了场上,那么英雄数量会+1");
             }
@@ -149,6 +152,8 @@ public class Champion : MonoBehaviour {//棋子类,
             if(lastQuadThisChampionStand != null && lastQuadThisChampionStand is DeployQuad) {
                 if(isAllyChampion) {
                     AllyChampionManager.Instance.OnSpaceChange(Space * -1);
+                    //这里也要检测羁绊的更新
+                    AllyChampionManager.Instance.UpdateCurrentTraits(this,false);
                 }
                 Debug.Log("说明是从场上撤下来,英雄数量-1");
             }
@@ -380,6 +385,7 @@ public class Champion : MonoBehaviour {//棋子类,
             lastQuadThisChampionStand.OnChampionLeave(this);
             if(lastQuadThisChampionStand is DeployQuad) {
                 AllyChampionManager.Instance.OnSpaceChange(Space * -1);
+                AllyChampionManager.Instance.UpdateCurrentTraits(this,false);
             }
             OnDisappear();
             UnRegisterThisChampion();
@@ -406,6 +412,7 @@ public class Champion : MonoBehaviour {//棋子类,
         if(_champion.lastQuadThisChampionStand is DeployQuad) {
             if(_champion.IsAllyChampion) {//目前enemy先不管
                 AllyChampionManager.Instance.OnSpaceChange(_champion.Space * -1);
+                AllyChampionManager.Instance.UpdateCurrentTraits(this,false);
             }
         }
         _champion.OnDisappear();

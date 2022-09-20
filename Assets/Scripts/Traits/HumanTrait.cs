@@ -1,10 +1,10 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-[CreateAssetMenu(menuName = "Trait/WarriorTrait",fileName = "WarriorTrait")]
-public class WarriorTrait : TraitBase {
+[CreateAssetMenu(menuName = "Trait/HumanTrait",fileName = "HumanTrait")]
+public class HumanTrait : TraitBase {
     public override string TriatName { 
         get {
-            return "Warrior";
+            return "Human";
     }protected set{ } }
 }

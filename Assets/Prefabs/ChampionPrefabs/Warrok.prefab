@@ -1550,8 +1550,12 @@ MonoBehaviour:
   defaultCost: 1
   space: 0
   isAllyChampion: 0
+  IsActive: 0
   defaultChampionStats: {fileID: 11400000, guid: de43cf8f81868bb499717fb7c43dcf1a,
     type: 2}
+  traits:
+  - {fileID: 11400000, guid: a32709b7a9a766040a0f03a44124e154, type: 2}
+  - {fileID: 11400000, guid: cc9a36741b2e38c41ae54f3cbf3e9ee6, type: 2}
   championAbility: {fileID: 0}
 --- !u!1 &5311661663020107965
 GameObject:

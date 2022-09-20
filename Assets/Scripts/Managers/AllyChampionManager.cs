@@ -5,12 +5,14 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class AllyChampionManager : ChampionManagerBase<AllyChampionManager> {
+    public Dictionary<TraitBase,List<Champion>> traitsDict;
     private List<Champion> championsBoughtLastCombatRound;
     private static int spaceTakenByChampions;//已经占用的人口数量
     public static int SpaceTakenByChampions => spaceTakenByChampions;//在考虑要不要把这个字段换到其他位置?不确定 再看看
     protected override void Init() {
         spaceTakenByChampions = 0;//初始状态下没英雄在上面
         championsBoughtLastCombatRound = new List<Champion>();
+        traitsDict = new Dictionary<TraitBase, List<Champion>>();
         GameEventsManager.StartListening(GameEventTypeVoid.ENTER_DEPLOY_STATE,OnEnterDeployState);
         GameEventsManager.StartListening(GameEventTypeVoid.ENTER_COMBAT_STATE,OnEnterCombatState);
     }
@@ -24,6 +26,29 @@ public class AllyChampionManager : ChampionManagerBase<AllyChampionManager> {
             championsBoughtLastCombatRound.Add(champion);//如果在战斗中买的,要加进来
         }
         CheckChampionUpgrade(champion);
+    }
+    public void UpdateCurrentTraits(Champion champion,bool isAdding) {
+        if(isAdding) {
+            foreach (TraitBase trait in champion.traits) {
+                if(!traitsDict.ContainsKey(trait)) {
+                    traitsDict.Add(trait,new List<Champion>());
+                }
+                if(!traitsDict[trait].Any(x=>x.ChampionName == champion.ChampionName)) {//如果list中已经有一个这个英雄了,那就不加,否则要加
+                    
+                }
+                traitsDict[trait].Add(champion);//无论有没有都要加
+                Debug.Log(traitsDict[trait].Count + "有tama几个呢");
+            }
+        }else {
+            //那就是减
+            foreach (TraitBase trait in champion.traits) {
+                Debug.Assert(traitsDict.ContainsKey(trait));
+                traitsDict[trait].Remove(champion);
+                Debug.Log(traitsDict[trait].Count + "有tama几个呢");
+            }
+            
+        }
+        GameEventsManager.TriggerEvent(GameEventTypeVoid.UPDATE_CURRENT_TRAITS);
     }
     public bool CanThisChampionUpgrade(Champion champion) {
         //给一个英雄进来,看看它能不能买了就升级,这里要判断在不在战斗,不在战斗的话场下场上都可以合成,在的话只能场下合成

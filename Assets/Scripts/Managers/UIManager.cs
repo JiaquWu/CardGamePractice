@@ -7,15 +7,19 @@ public enum UIElement {
     GAME_IDLE_UI,
     GAME_PLAY_UI,
     CARD_PANEL,
+    TRAIT_PANEL
 }
 public class UIManager : SingletonManager<UIManager> {
     //这个类主要是要控制在不同的游戏阶段该出现哪些UI
     [SerializeField]
     private GameObject cardPanel;
+    [SerializeField]
+    private GameObject traitPanel;
     public static Dictionary<UIElement,GameObject> uiElements;
     protected override void Init() {
         uiElements = new Dictionary<UIElement, GameObject>() {
-            {UIElement.CARD_PANEL,cardPanel}
+            {UIElement.CARD_PANEL,cardPanel},
+            {UIElement.TRAIT_PANEL,traitPanel}
         };
         foreach (var element in uiElements.Values) {
             element.SetActive(false);
@@ -28,10 +32,16 @@ public class UIManager : SingletonManager<UIManager> {
         if(uiElements[UIElement.CARD_PANEL] != null) {
             uiElements[UIElement.CARD_PANEL].SetActive(true);
         }
+        if(uiElements[UIElement.TRAIT_PANEL] != null) {
+            uiElements[UIElement.TRAIT_PANEL].SetActive(true);
+        }
     }
     void OnExitPlayState(GameEventTypeVoid ev) {
         if(uiElements[UIElement.CARD_PANEL] != null) {
             uiElements[UIElement.CARD_PANEL].SetActive(false);
+        }
+        if(uiElements[UIElement.TRAIT_PANEL] != null) {
+            uiElements[UIElement.TRAIT_PANEL].SetActive(false);
         }
     }
     private void OnDisable() {
