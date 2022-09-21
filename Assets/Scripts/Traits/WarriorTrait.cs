@@ -7,4 +7,5 @@ public class WarriorTrait : TraitBase {
         get {
             return "Warrior";
     }protected set{ } }
+
 }

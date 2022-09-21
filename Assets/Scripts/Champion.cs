@@ -82,6 +82,7 @@ public class Champion : MonoBehaviour {//棋子类,
     }//当前英雄数值
     [SerializeField]
     public List<TraitBase> traits = new List<TraitBase>();//一个英雄拥有的所有羁绊
+    private Dictionary<TraitBase,int> traitActivateStateDict;
     public ChampionAbility championAbility;
 
     protected ChampionState currentChampionState;
@@ -123,6 +124,11 @@ public class Champion : MonoBehaviour {//棋子类,
         GameEventsManager.StartListening(GameEventTypeChampion.SELL_A_CHAMPION,OnSell);
         GameEventsManager.StartListening(GameEventTypeVoid.ON_SELL_BUTTON_DOWN,OnSellButtonDown);
         RegisterThisChampion();//所有工作都做完再注册
+        //初始化字典状态
+        traitActivateStateDict = new Dictionary<TraitBase, int>();
+        foreach (TraitBase trait in traits) {
+            traitActivateStateDict.Add(trait,-1);
+        }
     }
     public void OnDisappear() {//卖掉或者升级会触发的函数,主要是取消事件监听
         GameEventsManager.StopListening(GameEventTypeVoid.ENTER_DEPLOY_STATE,OnEnterDeployState);
@@ -154,6 +160,7 @@ public class Champion : MonoBehaviour {//棋子类,
                     AllyChampionManager.Instance.OnSpaceChange(Space * -1);
                     //这里也要检测羁绊的更新
                     AllyChampionManager.Instance.UpdateCurrentTraits(this,false);
+                    ResetAllTraitsLevel();//到了备战席，那么就取消自己身上羁绊的激活状态
                 }
                 Debug.Log("说明是从场上撤下来,英雄数量-1");
             }
@@ -288,6 +295,46 @@ public class Champion : MonoBehaviour {//棋子类,
         championStateMachine.AddTriggerTransitionFromAny("EnterDeployStateIdle",ChampionState.IDLE);
         championStateMachine.AddTriggerTransitionFromAny("EnterEnemyQuad",ChampionState.IDLE);//enemy用的
         championStateMachine.Init();
+    }
+    public void UpdateTraitLevelToChampion(TraitBase trait,int traitLevel) {
+        if(traitActivateStateDict.ContainsKey(trait)) {
+            traitActivateStateDict[trait] = traitLevel;
+        }
+        //下面就根据不同的羁绊做事情
+        //有的是立即触发，比如说更改属性
+        //有的应该不在这里做，而在比如说战斗开始的时候做
+        if(trait is WarriorTrait) {
+            //
+            if(traitLevel == -1) {
+                //取消激活
+                Debug.Log("i'm no longer a warrior!");
+            }else {
+                Debug.Log("i'm a warrior!");
+            }
+        }
+        if(trait is HumanTrait) {
+            //
+            if(traitLevel == -1) {
+                //取消激活
+                Debug.Log("i'm no longer a Human!");
+            }else {
+                Debug.Log("i'm a Human!");
+            }
+        }
+        if(trait is OrcTrait) {
+            //
+            if(traitLevel == -1) {
+                //取消激活
+                Debug.Log("i'm no longer a Orc!");
+            }else {
+                Debug.Log("i'm a Orc!");
+            }
+        }
+    }
+    private void ResetAllTraitsLevel() {
+        foreach (TraitBase trait in traits) {
+            UpdateTraitLevelToChampion(trait,-1);
+        }
     }
     public void HitTarget() {
         Debug.Log("哥们儿攻击呢");

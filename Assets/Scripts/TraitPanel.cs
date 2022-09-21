@@ -22,8 +22,7 @@ public class TraitPanel : PanelBase {
                 //如果字典里面没有,说明要新加上一个羁绊,要新生成一个
                 traitTextDict.Add(trait,InstantiateText());
             }
-            Debug.Log(trait.TriatName + "??????????");
-            int count = AllyChampionManager.Instance.traitsDict[trait].GroupBy(x=>x.ChampionName).Select(x=>x.FirstOrDefault()).ToList().Count;
+            int count = AllyChampionManager.Instance.GetTraitChampionCount(trait);
             if(count == 0) {
                 GameObject go = traitTextDict[trait].gameObject;
                 Destroy(go);

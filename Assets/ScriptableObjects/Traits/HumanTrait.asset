@@ -12,3 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 97214339011f0804397580524f6ca2ee, type: 3}
   m_Name: HumanTrait
   m_EditorClassIdentifier: 
+  amountToActivate: 010000000200000003000000

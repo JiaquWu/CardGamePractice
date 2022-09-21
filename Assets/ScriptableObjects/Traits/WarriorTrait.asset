@@ -12,3 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b3c4b029f06bf4c499762562c06b2ac9, type: 3}
   m_Name: WarriorTrait
   m_EditorClassIdentifier: 
+  amountToActivate: 02000000040000000600000008000000

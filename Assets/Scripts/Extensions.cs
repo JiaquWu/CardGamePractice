@@ -19,4 +19,20 @@ public static class Extensions {
         }
         return res;
     }
+    public static bool IsInRange(this int myInt,int min,int max) {
+        return myInt >= min && myInt < max;//取下不取上,在trait的使用场景中,如果达到max就说明到了一个新level
+    }
+    public static int GetIndexInArray(this int count,int[] arr) {
+        Debug.Log("arr.Length" + arr.Length );
+        if(arr.Length == 0 || (arr.Length != 0 && count < arr[0])) return -1;
+        
+        for (int i = 0; i < arr.Length; i++) {
+            if(i<arr.Length -1 ) {
+                if(count.IsInRange(arr[i],arr[i+1])) return i;
+            }else {
+                if(count >= arr[i]) return i;
+            }
+        }
+        return -1;
+    }
 }

@@ -27,28 +27,41 @@ public class AllyChampionManager : ChampionManagerBase<AllyChampionManager> {
         }
         CheckChampionUpgrade(champion);
     }
-    public void UpdateCurrentTraits(Champion champion,bool isAdding) {
+    public void UpdateCurrentTraits(Champion champion,bool isAdding) {//关于enemy如果要有羁绊的话，应该在enemymanager里面另写
         if(isAdding) {
             foreach (TraitBase trait in champion.traits) {
                 if(!traitsDict.ContainsKey(trait)) {
                     traitsDict.Add(trait,new List<Champion>());
                 }
-                if(!traitsDict[trait].Any(x=>x.ChampionName == champion.ChampionName)) {//如果list中已经有一个这个英雄了,那就不加,否则要加
-                    
-                }
                 traitsDict[trait].Add(champion);//无论有没有都要加
-                Debug.Log(traitsDict[trait].Count + "有tama几个呢");
+                int index = trait.CalculateNewIndex(GetTraitChampionCount(trait));
+                Debug.Log("trait是 " + trait + "等级是 " + index + "英雄数量是" + GetTraitChampionCount(trait));
+                ActivateChampionsForATrait(trait,index);
             }
         }else {
             //那就是减
             foreach (TraitBase trait in champion.traits) {
                 Debug.Assert(traitsDict.ContainsKey(trait));
                 traitsDict[trait].Remove(champion);
-                Debug.Log(traitsDict[trait].Count + "有tama几个呢");
+                int index = trait.CalculateNewIndex(GetTraitChampionCount(trait));
+                Debug.Log("trait是 " + trait + "等级是 " + index + "英雄数量是" + GetTraitChampionCount(trait));
+                ActivateChampionsForATrait(trait,index);
             }
             
         }
         GameEventsManager.TriggerEvent(GameEventTypeVoid.UPDATE_CURRENT_TRAITS);
+    }
+    private void ActivateChampionsForATrait(TraitBase trait,int traitLevel) {
+        if(traitsDict.ContainsKey(trait)) {
+            foreach (Champion champion in traitsDict[trait]) {
+                champion.UpdateTraitLevelToChampion(trait,traitLevel);
+            }
+        }
+    }
+    public int GetTraitChampionCount(TraitBase targetTrait) {
+        if(!traitsDict.ContainsKey(targetTrait)) return 0;
+        int count = traitsDict[targetTrait].GroupBy(x=>x.ChampionName).Select(x=>x.FirstOrDefault()).ToList().Count;
+        return count;
     }
     public bool CanThisChampionUpgrade(Champion champion) {
         //给一个英雄进来,看看它能不能买了就升级,这里要判断在不在战斗,不在战斗的话场下场上都可以合成,在的话只能场下合成
