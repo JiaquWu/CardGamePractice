@@ -115,7 +115,10 @@ public class Champion : MonoBehaviour {//棋子类,
         }else {
             currentLevel = level;
         }        
-        
+        traitActivateStateDict = new Dictionary<TraitBase, int>();
+        foreach (TraitBase trait in traits) {
+            traitActivateStateDict.Add(trait,-1);
+        }
         InitFSM();
         OnEnterQuad(quadToStay);
         GameEventsManager.StartListening(GameEventTypeVoid.ENTER_DEPLOY_STATE,OnEnterDeployState);
@@ -125,10 +128,7 @@ public class Champion : MonoBehaviour {//棋子类,
         GameEventsManager.StartListening(GameEventTypeVoid.ON_SELL_BUTTON_DOWN,OnSellButtonDown);
         RegisterThisChampion();//所有工作都做完再注册
         //初始化字典状态
-        traitActivateStateDict = new Dictionary<TraitBase, int>();
-        foreach (TraitBase trait in traits) {
-            traitActivateStateDict.Add(trait,-1);
-        }
+        
     }
     public void OnDisappear() {//卖掉或者升级会触发的函数,主要是取消事件监听
         GameEventsManager.StopListening(GameEventTypeVoid.ENTER_DEPLOY_STATE,OnEnterDeployState);
@@ -361,6 +361,8 @@ public class Champion : MonoBehaviour {//棋子类,
         //本质上我要damagehandler告诉我到底要掉多少血
         float result = this.CalculateDamage(damageType,damage);
         Debug.Log("到底掉了多少血? " + result);
+        //这里需要弹出来一个ui告诉玩家掉了多少血呀
+        DamagePopupManager.Instance.CreateAPopup(transform,result);
         //然后这个结果怎么用呢?首先要计算当前血量,如果死了,触发死亡函数,如果没死,告诉UI
         currentChampionStats.healthPoints -= result;
         if(currentChampionStats.healthPoints <= 0) {
@@ -589,7 +591,6 @@ public class ChampionWalk: StateBase<ChampionState> {
     }
     public void TriggerAttackBehavior() {
         Debug.Log("那么就说明我找到我要打的敌人了");
-        animator.SetTrigger("Attack");
         attackTrigger?.Invoke(targetChampion);
     }
     IEnumerator FollowPath() {
@@ -636,6 +637,8 @@ public class ChampionAttack: StateBase<ChampionState> {
     }
     public override void OnEnter() {
         Debug.Log("这里英雄开始和它战斗了" + targetChampion.ChampionName);
+        animator.SetTrigger("Attack");
+        animator.speed = champion.CurrentChampionStats.AttackSpeed;
     }
     public override void OnLogic() {
         
@@ -652,6 +655,7 @@ public class ChampionDead: StateBase<ChampionState> {
         this.champion = champion;
     }
     public override void OnEnter() {
+        champion.LastQuadThisChampionStand.OnChampionLeave(champion);
         champion.gameObject.SetActive(false);
         champion.IsActive = false;
     }

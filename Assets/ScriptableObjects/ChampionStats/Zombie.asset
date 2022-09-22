@@ -28,12 +28,16 @@ MonoBehaviour:
   - 50
   - 60
   - 70
+  attackSpeedList:
+  - 0.7
+  - 0.9
+  - 1.1
   criticalChance: 0
   criticalChanceList:
-  - 0
-  - 0
-  - 0
-  criticalDamage: 0
+  - 0.1
+  - 0.2
+  - 0.3
+  criticalDamage: 1.5
   attackRange: 1.42
   ArmorList:
   - 20

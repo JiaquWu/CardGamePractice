@@ -16,6 +16,7 @@ public static class DamageHandler {
             //一个简单的伤害计算办法: 护甲/护甲+100 = 物理减伤率
             //(1-物理减伤率) * 伤害 = 最终伤害
             //法伤同理
+            damage = Probability.Chance(stats.criticalChance)? damage * stats.criticalDamage : damage;
             result = Mathf.RoundToInt((1-(stats.Armor / (stats.Armor + 100))) * damage);
             Debug.Log("怎么他妈计算的 " + stats.Armor + "??" + damage + "????" + result);
             break;
@@ -27,5 +28,11 @@ public static class DamageHandler {
             break;
         }
         return result;
+    }
+}
+
+public static class Probability {
+    public static bool Chance(float breakpoint) {
+        return breakpoint == 1.0f || UnityEngine.Random.Range(0.0f, 1.0f) < breakpoint;
     }
 }

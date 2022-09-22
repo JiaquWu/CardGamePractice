@@ -21,6 +21,9 @@ public class ChampionStats:ScriptableObject {//英雄数据,暂时还是用scrip
     public float AttackDamage{get;private set;}
     public List<float> attackDamageList;//攻击力
     [HideInInspector]
+    public float AttackSpeed{get;private set;}
+    public List<float> attackSpeedList;//攻速,默认是1,越高攻速越快
+    [HideInInspector]
     public float criticalChance;//暴击率
     public List<float> criticalChanceList;//[Range(0,1)]
     [Range(1,3)]
@@ -48,6 +51,7 @@ public class ChampionStats:ScriptableObject {//英雄数据,暂时还是用scrip
         this.MaxManaPoints = targetStats.maxManaPointsList[level];
         this.DefautManaPoints = targetStats.DefautManaPoints;
         this.AttackDamage = targetStats.attackDamageList[level];
+        this.AttackSpeed = targetStats.attackSpeedList[level];
         this.criticalChance = targetStats.criticalChanceList[level];
         this.criticalDamage = targetStats.criticalDamage;
         this.attackRange = targetStats.attackRange;
@@ -62,6 +66,7 @@ public class ChampionStats:ScriptableObject {//英雄数据,暂时还是用scrip
         this.MaxHealthPoints = defaultStats.maxHealthPointsList[championLevel];     
         this.MaxManaPoints = defaultStats.maxManaPointsList[championLevel];
         this.AttackDamage = defaultStats.attackDamageList[championLevel];
+        this.AttackSpeed = defaultStats.attackSpeedList[championLevel];
         this.criticalChance = defaultStats.criticalChanceList[championLevel];
         this.Armor = defaultStats.ArmorList[championLevel];
         this.MagicResistance = defaultStats.MagicResistanceList[championLevel];
