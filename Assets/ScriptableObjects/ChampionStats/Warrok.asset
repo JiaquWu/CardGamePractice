@@ -13,13 +13,10 @@ MonoBehaviour:
   m_Name: Warrok
   m_EditorClassIdentifier: 
   championName: Warrok
-  healthPoints: 0
   maxHealthPointsList:
   - 500
   - 800
   - 1000
-  manaPoints: 0
-  DefautManaPoints: 20
   maxManaPointsList:
   - 100
   - 100
@@ -32,20 +29,20 @@ MonoBehaviour:
   - 0.7
   - 0.8
   - 0.9
-  criticalChance: 0
   criticalChanceList:
   - 0.1
   - 0.15
   - 0.2
-  criticalDamage: 1.5
-  attackRange: 1.42
-  ArmorList:
+  armorList:
   - 20
   - 30
   - 40
-  MagicResistanceList:
+  magicResistanceList:
   - 20
   - 30
   - 40
-  ManaGainedPerAttack: 2
-  ManaGainedByTakingDamage: 10
+  defaultCriticalDamage: 1.5
+  defaultAttackRange: 1.5
+  defautInitialManaPoints: 20
+  defaultManaGainedPerAttack: 5
+  defaultManaGainedByTakingDamage: 7
