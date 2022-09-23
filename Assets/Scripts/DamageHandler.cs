@@ -16,12 +16,12 @@ public static class DamageHandler {
             //一个简单的伤害计算办法: 护甲/护甲+100 = 物理减伤率
             //(1-物理减伤率) * 伤害 = 最终伤害
             //法伤同理
-            damage = Probability.Chance(stats.criticalChance)? damage * stats.criticalDamage : damage;
-            result = Mathf.RoundToInt((1-(stats.Armor / (stats.Armor + 100))) * damage);
-            Debug.Log("怎么他妈计算的 " + stats.Armor + "??" + damage + "????" + result);
+            damage = Probability.Chance(stats.criticalChance.Value)? damage * stats.criticalDamage.Value : damage;
+            result = Mathf.RoundToInt((1-(stats.armor.Value / (stats.armor.Value + 100))) * damage);
+            Debug.Log("怎么他妈计算的 " + stats.armor + "??" + damage + "????" + result);
             break;
             case DamageType.MAGIC:
-            result = Mathf.RoundToInt((1-(stats.MagicResistance / (stats.MagicResistance + 100))) * damage);
+            result = Mathf.RoundToInt((1-(stats.magicResistance.Value / (stats.magicResistance.Value + 100))) * damage);
             break;
             case DamageType.PURE:
             //不用管,因为上面初始化了

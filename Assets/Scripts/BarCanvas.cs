@@ -13,8 +13,8 @@ public class BarCanvas : MonoBehaviour {
     private void OnEnable() {
         champion.UpdateHealthBar += UpdateHealthBarUI;
         champion.UpdateManaBar += UpdateManaBarUI;
-        UpdateHealthBarUI(champion.CurrentChampionStats.healthPoints);
-        UpdateManaBarUI(champion.CurrentChampionStats.manaPoints);
+        UpdateHealthBarUI(champion.CurrentChampionStats.healthPoints.Value);
+        UpdateManaBarUI(champion.CurrentChampionStats.manaPoints.Value);
         GameEventsManager.StartListening(GameEventTypeChampion.CHAMPION_UPGRADE_LEVEL_1,UpdateUIScale);
         GameEventsManager.StartListening(GameEventTypeChampion.CHAMPION_UPGRADE_LEVEL_2,UpdateUIScale);
         transform.localScale = new Vector3((float)1 / champion.transform.localScale.x, (float)1 / champion.transform.localScale.y, (float)1 / champion.transform.localScale.z); 
@@ -30,12 +30,12 @@ public class BarCanvas : MonoBehaviour {
     }
     private void UpdateHealthBarUI(float hpAmount) {
         if(healthBar != null) {
-            healthBar.fillAmount =  (float)hpAmount / champion.CurrentChampionStats.MaxHealthPoints;
+            healthBar.fillAmount =  (float)hpAmount / champion.CurrentChampionStats.maxHealthPoints.Value;
         }
     }
     private void UpdateManaBarUI(float mpAmount) {
         if(manaBar != null) {
-            manaBar.fillAmount = (float)mpAmount / champion.CurrentChampionStats.MaxManaPoints;
+            manaBar.fillAmount = (float)mpAmount / champion.CurrentChampionStats.maxManaPoints.Value;
         }
     }
     private void OnDisable() {
