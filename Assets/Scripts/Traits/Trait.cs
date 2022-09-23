@@ -13,7 +13,26 @@ public class TraitBase : ScriptableObject {//羁绊的基类
     public virtual int CalculateNewIndex(int count) {
         Debug.Log("amountToActivate" + amountToActivate.Length);
         return count.GetIndexInArray(amountToActivate);
-    }    
+    }
+    public BuffFactory buffFactory;
+    public Buff buff;
+    public void Apply(Champion champion,int traitLevel) {
+        if(buffFactory != null) {
+            if(buff != null && buff.isApplied) {//如果有buff并且apply过,那就更新,否则创建新的buff然后apply
+                //如果已经apply过了就要更新
+                buff.UpdateBuff(traitLevel);
+            }else {
+                buff = buffFactory.GetBuff(champion);//每次调用都会创建一个新的buff
+                buff.Apply(traitLevel);
+                buff.isApplied = true;
+            }
+        }
+    }
+    public void Remove(Champion champion) {
+        if(buffFactory != null && buff != null && buff.isApplied) {
+            buff.Remove();
+        }
+    }
     // protected virtual int ActivatedTraitsIndex {get; set;} = -1;//0就是激活了第一级羁绊
     // protected Action<int> ActivateAdditionalEffect;//int是说第几级,英雄知道每级效果会给自己什么不同的额外效果.0是1级
     // //protected int[] amountToActivate;//激活羁绊所需要的英雄数量

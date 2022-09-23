@@ -181,7 +181,7 @@ public class Champion : MonoBehaviour {//棋子类,
         if(Vector3.Distance(transform.position,target) <= float.Epsilon) {
             //说明champion的位置到了新的一格,先判断攻击有没有被触发,没有的话就再重新再寻一次路
             if(Vector3.Distance(targetChampion.transform.position,transform.position) 
-            <= currentChampionStats.attackRange * MapManager.Instance.CurrentMapConfiguration.ScaleRatio) {
+            <= currentChampionStats.attackRange.Value * MapManager.Instance.CurrentMapConfiguration.ScaleRatio) {
                 transform.LookAt(target);
                 triggerAttackFunc?.Invoke();
                 isWalking = false;
@@ -303,33 +303,42 @@ public class Champion : MonoBehaviour {//棋子类,
         //下面就根据不同的羁绊做事情
         //有的是立即触发，比如说更改属性
         //有的应该不在这里做，而在比如说战斗开始的时候做
-        if(trait is WarriorTrait) {
-            //
-            if(traitLevel == -1) {
-                //取消激活
-                Debug.Log("i'm no longer a warrior!");
+        if(trait.buffFactory != null && trait.buffFactory.buffType == BuffType.INSTANT) {
+            if(traitLevel != -1) {
+                trait.Apply(this,traitLevel);
             }else {
-                Debug.Log("i'm a warrior!");
+                trait.Remove(this);//不用担心还没有加就remove了,因为remove之前要检测加过没有
             }
         }
-        if(trait is HumanTrait) {
-            //
-            if(traitLevel == -1) {
-                //取消激活
-                Debug.Log("i'm no longer a Human!");
-            }else {
-                Debug.Log("i'm a Human!");
-            }
-        }
-        if(trait is OrcTrait) {
-            //
-            if(traitLevel == -1) {
-                //取消激活
-                Debug.Log("i'm no longer a Orc!");
-            }else {
-                Debug.Log("i'm a Orc!");
-            }
-        }
+        //好像不用管具体是什么buff了
+        // if(trait is WarriorTrait) {
+        //     //
+        //     if(traitLevel == -1) {
+        //         //取消激活
+        //         Debug.Log("i'm no longer a warrior!");
+        //     }else {
+        //         Debug.Log("i'm a warrior!");
+        //     }
+        // }
+        // if(trait is HumanTrait) {
+        //     //
+        //     if(traitLevel == -1) {
+        //         //取消激活
+        //         Debug.Log("i'm no longer a Human!");
+        //     }else {
+        //         Debug.Log("i'm a Human!");
+        //     }
+        // }
+        // if(trait is OrcTrait) {
+        //     //
+            
+        //     if(traitLevel == -1) {
+        //         //取消激活
+        //         Debug.Log("i'm no longer a Orc!");
+        //     }else {
+        //         Debug.Log("i'm a Orc!");
+        //     }
+        // }
     }
     private void ResetAllTraitsLevel() {
         foreach (TraitBase trait in traits) {
@@ -342,20 +351,19 @@ public class Champion : MonoBehaviour {//棋子类,
     }
     public void OnHit(Champion champion) {
         //被传进来的champion平A打到了
-        Debug.Log("被传进来的champion打了" + champion.championName);
         //具体要做什么事情呢,首先要计算出被打了多少
-        TakeDamage(champion,DamageType.PHYSICS,champion.currentChampionStats.AttackDamage);
+        TakeDamage(champion,DamageType.PHYSICS,champion.currentChampionStats.attackDamage.Value);
     }
     public void GainMana(float amount) {
-        currentChampionStats.manaPoints += amount;
+        currentChampionStats.manaPoints.Value += amount;
         //每次回蓝都要判断蓝量满了没有,如果有,就要放技能!
-        if(currentChampionStats.manaPoints >= currentChampionStats.MaxManaPoints) {
+        if(currentChampionStats.manaPoints.Value >= currentChampionStats.maxManaPoints.Value) {
             if(championAbility != null) {
                 championAbility.Execute();
             }
-            currentChampionStats.manaPoints = 0;
+            currentChampionStats.manaPoints.Value = 0;
         }
-        UpdateManaBar?.Invoke(currentChampionStats.manaPoints);
+        UpdateManaBar?.Invoke(currentChampionStats.manaPoints.Value);
     }
     public void TakeDamage(Champion damageSource, DamageType damageType,float damage) {
         //本质上我要damagehandler告诉我到底要掉多少血
@@ -364,14 +372,26 @@ public class Champion : MonoBehaviour {//棋子类,
         //这里需要弹出来一个ui告诉玩家掉了多少血呀
         DamagePopupManager.Instance.CreateAPopup(transform,result);
         //然后这个结果怎么用呢?首先要计算当前血量,如果死了,触发死亡函数,如果没死,告诉UI
-        currentChampionStats.healthPoints -= result;
-        if(currentChampionStats.healthPoints <= 0) {
+        currentChampionStats.healthPoints.Value -= result;
+        if(currentChampionStats.healthPoints.Value <= 0) {
             OnDead();
             //伤害来源的英雄要知道这件事情
             damageSource.OnTargetDead();
         }else {
-            GainMana(Mathf.CeilToInt(result / currentChampionStats.ManaGainedByTakingDamage));
-            UpdateHealthBar?.Invoke(currentChampionStats.healthPoints);
+            GainMana(Mathf.CeilToInt(result / currentChampionStats.manaGainedByTakingDamage.Value));
+            UpdateHealthBar?.Invoke(currentChampionStats.healthPoints.Value);
+        }
+    }
+    public void ModifyStats(ChampionStatsType statsType,float amount) {
+        if(CurrentChampionStats.statsDict.ContainsKey(statsType)) {
+            CurrentChampionStats.statsDict[statsType].Value += amount;
+            Debug.Log(statsType +  "变化了 " + amount + "现在是"+ CurrentChampionStats.statsDict[statsType].Value);
+            //如果是增加最大血量或者蓝量
+            if(statsType == ChampionStatsType.MAX_HEALTH_POINT) {
+                ModifyStats(ChampionStatsType.HEALTH_POINT,amount);
+            }else if(statsType == ChampionStatsType.MAX_MANA_POINT) {
+                ModifyStats(ChampionStatsType.MANA_POINT,amount);
+            }
         }
     }
     public void OnDead() {
@@ -571,7 +591,7 @@ public class ChampionWalk: StateBase<ChampionState> {
         Vector3 target = champion.GetNearestOpponentChampionPos(out targetChampion,out isAChampionAvailable);
         if(isAChampionAvailable) {
             if(Vector3.Distance(target,champion.transform.position) 
-            <= champion.CurrentChampionStats.attackRange * MapManager.Instance.CurrentMapConfiguration.ScaleRatio) {
+            <= champion.CurrentChampionStats.attackRange.Value * MapManager.Instance.CurrentMapConfiguration.ScaleRatio) {
                 champion.transform.LookAt(targetChampion.transform);
                 TriggerAttackBehavior();
             }else {
@@ -633,12 +653,12 @@ public class ChampionAttack: StateBase<ChampionState> {
     public void HitTarget() {
         //champion的动画判断出champion打到人了,具体逻辑在这里执行
         targetChampion.OnHit(champion);
-        champion.GainMana(champion.CurrentChampionStats.ManaGainedPerAttack);
+        champion.GainMana(champion.CurrentChampionStats.manaGainedPerAttack.Value);
     }
     public override void OnEnter() {
         Debug.Log("这里英雄开始和它战斗了" + targetChampion.ChampionName);
         animator.SetTrigger("Attack");
-        animator.speed = champion.CurrentChampionStats.AttackSpeed;
+        animator.speed = champion.CurrentChampionStats.attackSpeed.Value;
     }
     public override void OnLogic() {
         
