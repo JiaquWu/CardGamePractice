@@ -987,7 +987,7 @@ MonoBehaviour:
   traits:
   - {fileID: 11400000, guid: a32709b7a9a766040a0f03a44124e154, type: 2}
   - {fileID: 11400000, guid: dc063b5c70676da4fb59cf0b6086d26a, type: 2}
-  championAbility: {fileID: 0}
+  championAbility: {fileID: 11400000, guid: 306df31670bbca444bad775f10228dc2, type: 2}
 --- !u!1 &2748835123711913492
 GameObject:
   m_ObjectHideFlags: 0

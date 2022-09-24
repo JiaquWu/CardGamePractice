@@ -55,7 +55,6 @@ public class Quad : MonoBehaviour {
         EnableEmissionShader(false);
     }
     public void OnChampionLeave(Champion champion) {
-        Debug.Log("OnChampionLeave");
         championOnThisQuad = null;
         node.walkable = true;
     }

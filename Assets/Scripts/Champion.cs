@@ -93,6 +93,7 @@ public class Champion : MonoBehaviour {//棋子类,
 
     public event Action<float> UpdateHealthBar;
     public event Action<float> UpdateManaBar;
+    public Action<Champion,Champion> additionalAttackEffect;
     private void Update() {
         if(championStateMachine != null) {//for testing
             championStateMachine.OnLogic();
@@ -303,7 +304,7 @@ public class Champion : MonoBehaviour {//棋子类,
         //下面就根据不同的羁绊做事情
         //有的是立即触发，比如说更改属性
         //有的应该不在这里做，而在比如说战斗开始的时候做
-        if(trait.buffFactory != null && trait.buffFactory.buffType == BuffType.INSTANT) {
+        if(trait.buffFactory != null && trait.buffFactory.buffType == BuffTypeEnum.INSTANT) {
             if(traitLevel != -1) {
                 trait.Apply(this,traitLevel);
             }else {
@@ -359,7 +360,7 @@ public class Champion : MonoBehaviour {//棋子类,
         //每次回蓝都要判断蓝量满了没有,如果有,就要放技能!
         if(currentChampionStats.manaPoints.Value >= currentChampionStats.maxManaPoints.Value) {
             if(championAbility != null) {
-                championAbility.Execute();
+                championAbility.Execute(this);
             }
             currentChampionStats.manaPoints.Value = 0;
         }
@@ -368,9 +369,8 @@ public class Champion : MonoBehaviour {//棋子类,
     public void TakeDamage(Champion damageSource, DamageType damageType,float damage) {
         //本质上我要damagehandler告诉我到底要掉多少血
         float result = this.CalculateDamage(damageType,damage);
-        Debug.Log("到底掉了多少血? " + result);
         //这里需要弹出来一个ui告诉玩家掉了多少血呀
-        DamagePopupManager.Instance.CreateAPopup(transform,result);
+        DamagePopupManager.Instance.CreateAPopup(transform,result,damageType);
         //然后这个结果怎么用呢?首先要计算当前血量,如果死了,触发死亡函数,如果没死,告诉UI
         currentChampionStats.healthPoints.Value -= result;
         if(currentChampionStats.healthPoints.Value <= 0) {
@@ -399,7 +399,6 @@ public class Champion : MonoBehaviour {//棋子类,
         //除了自己死了,打我的champion也要知道这件事情
     }
     public void OnTargetDead() {
-        Debug.Log("????????????????");
         championStateMachine.Trigger("TargetDead");
     }
     public void CombatEnd(bool isAllyWin) {
@@ -503,11 +502,25 @@ public class Champion : MonoBehaviour {//棋子类,
     }
 }
 public class ChampionAbility:ScriptableObject {//每个英雄的大招不一样
-    public virtual void Execute() {
+    public virtual void Execute(Champion champion) {
         
     }
 }
-
+public class ChampionBuffAbility : ChampionAbility {
+    public BuffFactory buffFactory;
+    public Buff buff;
+    public override void Execute(Champion champion) {
+        Apply(champion);
+    }
+    public virtual void Apply(Champion champion) {
+        if(buffFactory != null) {
+            if(buff == null) {
+                buff = buffFactory.GetBuff(champion);
+            }
+            buff.Apply(champion.Level);
+        }
+    }
+}
 public class ChampionIdle : StateBase<ChampionState> {//idle是已经在场上了,prepare是还在下面,播放动画都是idle,但是性质不一样
     Animator animator;
     Champion champion;
@@ -516,16 +529,13 @@ public class ChampionIdle : StateBase<ChampionState> {//idle是已经在场上�
         this.champion = champion;
     }
     public override void OnEnter() {
-        Debug.Log("DeployQuad");
         animator.SetTrigger("Idle");
         champion.IsActive = true;
         //如果棋子已经死亡,那么就
     }
     public override void OnLogic() {
-        Debug.Log("DeployQuadOnLogic");
     }
     public override void OnExit() {
-        Debug.Log("DeployQuadExit");
     }
 }
 
@@ -535,14 +545,12 @@ public class ChampionPrepare: StateBase<ChampionState> {
         this.animator = animator;
     }
     public override void OnEnter() {
-        Debug.Log("Prepare");
         animator.SetTrigger("Idle");
     }
     public override void OnLogic() {
-        Debug.Log("PrepareOnLogic");
+        
     }
     public override void OnExit() {
-        Debug.Log("PrepareExit");
     }
 }
 public class ChampionWalk: StateBase<ChampionState> {
@@ -580,7 +588,6 @@ public class ChampionWalk: StateBase<ChampionState> {
     }
     public void OnPathFound(Vector3[] newPath, bool pathSuccessful) {
         //寻路寻到了就开始走
-        Debug.Log("路寻到了吗" + pathSuccessful);
         if(pathSuccessful) {
             path = newPath;
             mono.StopCoroutine(FollowPath());
@@ -606,11 +613,9 @@ public class ChampionWalk: StateBase<ChampionState> {
     }
     public void FindPathTowardsNearestOpponent() {
         Vector3 target = champion.GetNearestOpponentChampionPos(out targetChampion, out isAChampionAvailable);
-        Debug.Log("起点是: " +champion.transform.position + "终点是 " + target);
         PathRequestManager.RequestPath(champion.transform.position,target,OnPathFound);
     }
     public void TriggerAttackBehavior() {
-        Debug.Log("那么就说明我找到我要打的敌人了");
         attackTrigger?.Invoke(targetChampion);
     }
     IEnumerator FollowPath() {
@@ -622,7 +627,6 @@ public class ChampionWalk: StateBase<ChampionState> {
         if(path.Length > 0) {
             animator.SetTrigger("Walk");
             Vector3 currentWayPoint = path[0];
-            Debug.Log("现在要去哪里" + currentWayPoint);
             champion.QuadStateChange(currentWayPoint);//执行一次,改quad的状态
             while(true) {
                 if(champion.transform.position == currentWayPoint) {
@@ -652,11 +656,11 @@ public class ChampionAttack: StateBase<ChampionState> {
     }
     public void HitTarget() {
         //champion的动画判断出champion打到人了,具体逻辑在这里执行
+        champion.additionalAttackEffect?.Invoke(champion,targetChampion);
         targetChampion.OnHit(champion);
         champion.GainMana(champion.CurrentChampionStats.manaGainedPerAttack.Value);
     }
     public override void OnEnter() {
-        Debug.Log("这里英雄开始和它战斗了" + targetChampion.ChampionName);
         animator.SetTrigger("Attack");
         animator.speed = champion.CurrentChampionStats.attackSpeed.Value;
     }

@@ -1,14 +1,14 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-public enum BuffType {//何时触发这个Buff,首先羁绊会触发buff,有的是放到场上就能触发,有的是战斗开始触发,别的以后再添加吧
+public enum BuffTypeEnum {//何时触发这个Buff,首先羁绊会触发buff,有的是放到场上就能触发,有的是战斗开始触发,别的以后再添加吧
     INSTANT,
     BATTLE_START
 
 }
 public abstract class BuffFactory : ScriptableObject {
     public abstract Buff GetBuff(Champion target);
-    public BuffType buffType;
+    public BuffTypeEnum buffType;
 }
 
 public class BuffFactory<DataType,BuffType> : BuffFactory

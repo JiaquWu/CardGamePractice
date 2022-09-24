@@ -13,3 +13,4 @@ MonoBehaviour:
   m_Name: OrcTrait
   m_EditorClassIdentifier: 
   amountToActivate: 010000000200000003000000
+  buffFactory: {fileID: 11400000, guid: 3a3320da7bde37e458400660dc43fd47, type: 2}

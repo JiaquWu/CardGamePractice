@@ -12,12 +12,11 @@ public class DamagePopup : MonoBehaviour {
     private Text text;
     [SerializeField]
     private float moveMutiplier;
-    public void UpdateDamage(float damage) {
-        text.text = damage.ToString();
-    }
-    private void OnEnable() {
+    public void UpdateDamage(float damage,DamageType damageType) {
         rect = GetComponent<RectTransform>();
         text = GetComponent<Text>();
+        text.text = damage.ToString();
+        text.color = damageType == DamageType.PHYSICS? Color.red : Color.cyan;   
         StartCoroutine(FadeOut());
     }
     IEnumerator FadeOut() {

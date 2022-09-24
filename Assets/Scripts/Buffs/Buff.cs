@@ -3,9 +3,18 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public abstract class Buff {
-    public abstract void Apply(int level);
-    public abstract void Remove();
-    public abstract void UpdateBuff(int level);//羁绊人数变化产生的buff变化要更新
+    public virtual void Apply() {
+
+    }
+    public virtual void Apply(int level) {
+
+    }
+    public virtual void Remove() {
+
+    }
+    public virtual void UpdateBuff(int level){
+        
+    }//羁绊人数变化产生的buff变化要更新
     public bool isApplied;
 }
 

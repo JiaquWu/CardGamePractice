@@ -18,7 +18,6 @@ public static class DamageHandler {
             //法伤同理
             damage = Probability.Chance(stats.criticalChance.Value)? damage * stats.criticalDamage.Value : damage;
             result = Mathf.RoundToInt((1-(stats.armor.Value / (stats.armor.Value + 100))) * damage);
-            Debug.Log("怎么他妈计算的 " + stats.armor + "??" + damage + "????" + result);
             break;
             case DamageType.MAGIC:
             result = Mathf.RoundToInt((1-(stats.magicResistance.Value / (stats.magicResistance.Value + 100))) * damage);
