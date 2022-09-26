@@ -8,15 +8,14 @@ using UnityEngine;
 public class ChampionManagerBase<T> : SingletonManager<T>
 where T:ChampionManagerBase<T> {
     protected Dictionary<string,List<Champion>> championsDict;
+    public Dictionary<TraitBase,List<Champion>> traitsDict;
     
     //在战斗阶段买的所有英雄都会放到这里面,战斗阶段开始清零,deploy阶段开始的之后会挨个检测是否能合成
     protected override void Init() {
-        GameEventsManager.StartListening(GameEventTypeVoid.ENTER_DEPLOY_STATE,OnEnterDeployState);
-        GameEventsManager.StartListening(GameEventTypeVoid.ENTER_COMBAT_STATE,OnEnterCombatState);
+        traitsDict = new Dictionary<TraitBase, List<Champion>>();
     }
     private void OnDisable() {
-        GameEventsManager.StopListening(GameEventTypeVoid.ENTER_DEPLOY_STATE,OnEnterDeployState);
-        GameEventsManager.StopListening(GameEventTypeVoid.ENTER_COMBAT_STATE,OnEnterCombatState);
+        
     }
     protected void InitDict() {
         if(championsDict == null) {
@@ -77,5 +76,42 @@ where T:ChampionManagerBase<T> {
     }
     protected virtual void OnEnterDeployState(GameEventTypeVoid ev) {//开始买东西之前把每个champion都检查一遍
         
+    }
+    public void UpdateCurrentTraits(Champion champion,bool isAdding) {//关于enemy如果要有羁绊的话，应该在enemymanager里面另写
+        if(isAdding) {
+            foreach (TraitBase trait in champion.traits) {
+                if(!traitsDict.ContainsKey(trait)) {
+                    traitsDict.Add(trait,new List<Champion>());
+                }
+                traitsDict[trait].Add(champion);//无论有没有都要加
+                int index = trait.CalculateNewIndex(GetTraitChampionCount(trait));
+                Debug.Log("trait是 " + trait + "等级是 " + index + "英雄数量是" + GetTraitChampionCount(trait));
+                ActivateChampionsForATrait(trait,index);
+            }
+        }else {
+            //那就是减
+            foreach (TraitBase trait in champion.traits) {
+                Debug.Assert(traitsDict.ContainsKey(trait));
+                traitsDict[trait].Remove(champion);
+                int index = trait.CalculateNewIndex(GetTraitChampionCount(trait));
+                Debug.Log("trait是 " + trait + "等级是 " + index + "英雄数量是" + GetTraitChampionCount(trait));
+                ActivateChampionsForATrait(trait,index);
+            }
+            
+        }
+        GameEventsManager.TriggerEvent(GameEventTypeVoid.UPDATE_CURRENT_TRAITS);
+        Debug.Log("这里执行了吗");
+    }
+    private void ActivateChampionsForATrait(TraitBase trait,int traitLevel) {
+        if(traitsDict.ContainsKey(trait)) {
+            foreach (Champion champion in traitsDict[trait]) {
+                champion.UpdateTraitLevelToChampion(trait,traitLevel);
+            }
+        }
+    }
+    public int GetTraitChampionCount(TraitBase targetTrait) {
+        if(!traitsDict.ContainsKey(targetTrait)) return 0;
+        int count = traitsDict[targetTrait].GroupBy(x=>x.ChampionName).Select(x=>x.FirstOrDefault()).ToList().Count;
+        return count;
     }
 }

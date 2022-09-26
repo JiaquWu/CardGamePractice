@@ -21,7 +21,6 @@ public class AbilityCustomTrigger : MonoBehaviour,IPoolObject {
     }
     
     private void OnTriggerEnter(Collider other) {
-        Debug.Log("这里执行了吗");
         if(other.TryGetComponent<Champion>(out Champion champion)) {
             triggerEvent?.Invoke(champion);
         }

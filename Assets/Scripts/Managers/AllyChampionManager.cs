@@ -5,14 +5,13 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class AllyChampionManager : ChampionManagerBase<AllyChampionManager> {
-    public Dictionary<TraitBase,List<Champion>> traitsDict;
     private List<Champion> championsBoughtLastCombatRound;
     private static int spaceTakenByChampions;//已经占用的人口数量
     public static int SpaceTakenByChampions => spaceTakenByChampions;//在考虑要不要把这个字段换到其他位置?不确定 再看看
     protected override void Init() {
+        base.Init();
         spaceTakenByChampions = 0;//初始状态下没英雄在上面
         championsBoughtLastCombatRound = new List<Champion>();
-        traitsDict = new Dictionary<TraitBase, List<Champion>>();
         GameEventsManager.StartListening(GameEventTypeVoid.ENTER_DEPLOY_STATE,OnEnterDeployState);
         GameEventsManager.StartListening(GameEventTypeVoid.ENTER_COMBAT_STATE,OnEnterCombatState);
     }
@@ -27,42 +26,7 @@ public class AllyChampionManager : ChampionManagerBase<AllyChampionManager> {
         }
         CheckChampionUpgrade(champion);
     }
-    public void UpdateCurrentTraits(Champion champion,bool isAdding) {//关于enemy如果要有羁绊的话，应该在enemymanager里面另写
-        if(isAdding) {
-            foreach (TraitBase trait in champion.traits) {
-                if(!traitsDict.ContainsKey(trait)) {
-                    traitsDict.Add(trait,new List<Champion>());
-                }
-                traitsDict[trait].Add(champion);//无论有没有都要加
-                int index = trait.CalculateNewIndex(GetTraitChampionCount(trait));
-                Debug.Log("trait是 " + trait + "等级是 " + index + "英雄数量是" + GetTraitChampionCount(trait));
-                ActivateChampionsForATrait(trait,index);
-            }
-        }else {
-            //那就是减
-            foreach (TraitBase trait in champion.traits) {
-                Debug.Assert(traitsDict.ContainsKey(trait));
-                traitsDict[trait].Remove(champion);
-                int index = trait.CalculateNewIndex(GetTraitChampionCount(trait));
-                Debug.Log("trait是 " + trait + "等级是 " + index + "英雄数量是" + GetTraitChampionCount(trait));
-                ActivateChampionsForATrait(trait,index);
-            }
-            
-        }
-        GameEventsManager.TriggerEvent(GameEventTypeVoid.UPDATE_CURRENT_TRAITS);
-    }
-    private void ActivateChampionsForATrait(TraitBase trait,int traitLevel) {
-        if(traitsDict.ContainsKey(trait)) {
-            foreach (Champion champion in traitsDict[trait]) {
-                champion.UpdateTraitLevelToChampion(trait,traitLevel);
-            }
-        }
-    }
-    public int GetTraitChampionCount(TraitBase targetTrait) {
-        if(!traitsDict.ContainsKey(targetTrait)) return 0;
-        int count = traitsDict[targetTrait].GroupBy(x=>x.ChampionName).Select(x=>x.FirstOrDefault()).ToList().Count;
-        return count;
-    }
+    
     public bool CanThisChampionUpgrade(Champion champion) {
         //给一个英雄进来,看看它能不能买了就升级,这里要判断在不在战斗,不在战斗的话场下场上都可以合成,在的话只能场下合成
         if(championsDict.ContainsKey(champion.ChampionName)) {

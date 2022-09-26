@@ -132,13 +132,18 @@ public class CardManager : SingletonManager<CardManager> {
             temp += dropRate[i];
             if(temp >= target) {
                 index = i;
-                break;
+                if(index <= currentAvailableCards.Count && currentAvailableCards[index+1].Count > 0) {
+                    int cardIndex = Random.Range(0,currentAvailableCards[index+1].Count);//+1是因为index默认是0,而字典里面是12345
+                    card = currentAvailableCards[index+1][cardIndex];
+                    if(card == null) {
+                        continue;
+                    }else {
+                        return card;
+                    }
+                }
             }
         }
-        if(index <= currentAvailableCards.Count && currentAvailableCards[index+1].Count > 0) {
-            int cardIndex = Random.Range(0,currentAvailableCards[index+1].Count);//+1是因为index默认是0,而字典里面是12345
-            card = currentAvailableCards[index+1][cardIndex];
-        }
+        
         return card;
     }
 }

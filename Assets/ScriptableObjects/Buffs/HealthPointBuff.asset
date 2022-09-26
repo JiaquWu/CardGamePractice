@@ -15,9 +15,9 @@ MonoBehaviour:
   buffType: 0
   data:
     additionalHealthPoints:
-    - 400
-    - 600
     - 800
+    - 1000
+    - 1200
     isTemporary: 0
     duration: 0
     level: 1

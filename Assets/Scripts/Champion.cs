@@ -115,6 +115,13 @@ public class Champion : MonoBehaviour {//棋子类,
             currentCost = defaultCost;
         }else {
             currentLevel = level;
+            //如果是敌人要更新一下属性
+            if(currentLevel == 0) {
+                currentChampionStats = (ChampionStats)ScriptableObject.CreateInstance("ChampionStats");
+                currentChampionStats.CopyChampionStats(defaultChampionStats,currentLevel);
+            }else {
+                OnChampionUpgrade(currentLevel);
+            }
         }        
         traitActivateStateDict = new Dictionary<TraitBase, int>();
         foreach (TraitBase trait in traits) {
@@ -143,7 +150,7 @@ public class Champion : MonoBehaviour {//棋子类,
         //除了改位置,还应该改一些变量啥的
         championOnTheTargetQuad.OnEnterQuad(lastQuadThisChampionStand,true);
     }
-    public void OnEnterQuad(Quad quad,bool isSwaping = false) {//某种方式让champion进入到一个quad,要做很多事
+    public void OnEnterQuad(Quad quad,bool isSwaping = false) {//某种方式让champion进入到一个quad,要做很多事,这里只有两种:玩家鼠标操作友方或者敌方自动生成在格子上
         if(quad is DeployQuad) {
             championStateMachine.Trigger("OnDeployQuad");
             if(lastQuadThisChampionStand == null || lastQuadThisChampionStand is PreparationQuad) {//如果是null,说明直接买进去,或者从下面上去
@@ -151,7 +158,7 @@ public class Champion : MonoBehaviour {//棋子类,
                     AllyChampionManager.Instance.OnSpaceChange(Space);
                     //这里要检测羁绊的更新
                     AllyChampionManager.Instance.UpdateCurrentTraits(this,true);
-                }
+                } 
                 Debug.Log("说明成功从备战到了场上,那么英雄数量会+1");
             }
         }else if(quad is PreparationQuad){     
@@ -165,7 +172,8 @@ public class Champion : MonoBehaviour {//棋子类,
                 }
                 Debug.Log("说明是从场上撤下来,英雄数量-1");
             }
-        }else if(quad is EnemyQuad) {
+        }else if(quad is EnemyQuad) {//这里只会是enemy被生成上去,因此要更新
+            EnemyChampionManager.Instance.UpdateCurrentTraits(this,true);//记得在不同关卡删enemy的时候也要更新
             championStateMachine.Trigger("EnterEnemyQuad");
         }
         transform.position = quad.node.worldPosition;
@@ -321,13 +329,12 @@ public class Champion : MonoBehaviour {//棋子类,
     public void ForceAttackTarget(Champion targetChampion) {
         StopAllCoroutines();
         if(championStateMachine.ActiveState.name == ChampionState.WALK) {
-            championWalkState.MoveToTarget(targetChampion.transform.position,targetChampion,true);        
+            championWalkState.MoveToTarget(targetChampion.transform.position,targetChampion,true,true);        
         }else if(championStateMachine.ActiveState.name == ChampionState.ATTACK) {
             if(IsTargetInAttackRange(targetChampion.transform.position)) {
                 championAttackState.UpdateTargetChampion(targetChampion);
             }else {
                 championWalkState.MoveToTarget(targetChampion.transform.position,targetChampion,true,true);
-                championWalkState.isForceEntering = true;
                 championStateMachine.Trigger("ForceToWalk");
             }
         }
@@ -394,7 +401,15 @@ public class Champion : MonoBehaviour {//棋子类,
         //除了自己死了,打我的champion也要知道这件事情
     }
     public void OnTargetDead() {
-        championStateMachine.Trigger("TargetDead");
+        Debug.Log("这里目标死了,所以我应该去找新的" + championStateMachine.ActiveState.name);
+        if(championStateMachine.ActiveState.name == ChampionState.ATTACK) {
+            championStateMachine.Trigger("TargetDead");
+        }
+        // else if(championStateMachine.ActiveState.name == ChampionState.WALK) {
+            // StopAllCoroutines();
+            
+        // }
+        
     }
     public void CombatEnd(bool isAllyWin) {
         //有一方死光了
@@ -539,8 +554,6 @@ public class ChampionWalk: StateBase<ChampionState> {
     Champion targetChampion;
     Action<Champion> attackTrigger;
     Action<bool> combatEndTrigger;
-    public bool isForceEntering;
-    private Champion forceTargetChampion;
     bool isAChampionAvailable;
     public ChampionWalk(Champion champion, Animator animator,Action<bool> combatEndTrigger, Action<Champion> attackTrigger, bool needsExitTime) : base(needsExitTime) {
         mono = champion;
@@ -554,60 +567,107 @@ public class ChampionWalk: StateBase<ChampionState> {
         //没有检测是否存在,为了省事先这样,手动配的时候需要确保有walk
         //需要请求一个寻路,需要知道终点是啥
         //对于ally来说,终点应该是离自己最近的enemy,反之亦然
-        Debug.Log("我进来了吗？" + isForceEntering);
-        if(!isForceEntering) {
+        if(targetChampion == null) {
             CheckNearestOpponent();
-        }  
+        }
     }
     public override void OnLogic() {
-        
 
     }
     public override void OnExit() {
         animator.ResetTrigger("Walk");
-        isForceEntering = false;
+        targetChampion = null;
     }
-    public void OnPathFound(Vector3[] newPath, bool pathSuccessful) {
+    public void OnDynamicPathFound(Vector3[] newPath, bool pathSuccessful) {
         //寻路寻到了就开始走
         if(pathSuccessful) {
             path = newPath;
-            mono.StopCoroutine(FollowPath());
-            mono.StartCoroutine(FollowPath());
+            mono.StopAllCoroutines();
+            mono.StartCoroutine(FollowDynamicPath());
         }
     }
-    public void CheckNearestOpponent(bool alreadyHasTarget = false) {
-        if(!alreadyHasTarget || forceTargetChampion == null) {
-            Vector3 target = champion.GetNearestOpponentChampionPos(out targetChampion,out isAChampionAvailable);
-            MoveToTarget(target,targetChampion,isAChampionAvailable,alreadyHasTarget);
-        }else {
-            MoveToTarget(forceTargetChampion.transform.position,forceTargetChampion,isAChampionAvailable,alreadyHasTarget);
+    public void OnFixedPathFound(Vector3[] newPath, bool pathSuccessful) {
+        if(pathSuccessful) {
+            path = newPath;
+            mono.StopAllCoroutines();
+            mono.StartCoroutine(FollowPathToFixedTarget(targetChampion));
         }
     }
-    public void MoveToTarget(Vector3 targetPos,Champion targetChampion,bool isAChampionAvailable,bool alreadyHasTarget = false) {
-        if(alreadyHasTarget) {
-            forceTargetChampion = targetChampion;
-            this.targetChampion = targetChampion;
-        }
-        if(isAChampionAvailable) {
-            if(champion.IsTargetInAttackRange(targetPos)) {
-                TriggerAttackBehavior();
+    public void CheckNearestOpponent() { 
+        Vector3 target = champion.GetNearestOpponentChampionPos(out targetChampion,out isAChampionAvailable);
+        MoveToTarget(target,targetChampion,isAChampionAvailable);
+    }
+    public void MoveToTarget(Vector3 targetPos,Champion targetChampion,bool isAChampionAvailable,bool alreadyHasTarget = false) {//只通过这个方法调用不同的行走逻辑
+        if(alreadyHasTarget) {//如果是带着锁定目标进来的
+            if(targetChampion != null && targetChampion.IsActive) {
+                this.targetChampion = targetChampion;
+                //然后检测攻击
+                if(champion.IsTargetInAttackRange(targetPos)) {
+                    TriggerAttackBehavior();
+                }else {
+                    FindPathTowardsTarget(targetPos);
+                }
             }else {
-                FindPathTowardsNearestOpponent(targetPos,alreadyHasTarget);
-            //可能出现距离还不够,但是找不到路了?
+                CheckNearestOpponent();
+            } 
+        }else {//如果是新找的目标
+            if(isAChampionAvailable) {
+                if(champion.IsTargetInAttackRange(targetPos)) {
+                    TriggerAttackBehavior();
+                }else {
+                    FindPathTowardsNearestOpponent(targetPos);
+                }
+            }else {
+                combatEndTrigger?.Invoke(champion.IsAllyChampion);
             }
-        }else {
-            //如果进walk状态了但是没有英雄能打了,就说明所有英雄都g了,就说明出结果了,
-            combatEndTrigger?.Invoke(champion.IsAllyChampion);
         }
+        // if(isAChampionAvailable) {
+        //     if(champion.IsTargetInAttackRange(targetPos)) {
+        //         TriggerAttackBehavior();
+        //     }else {
+        //         if(alreadyHasTarget) {
+        //             FindPathTowardsTarget(targetPos);
+        //         }else {
+        //             FindPathTowardsNearestOpponent(targetPos);
+        //         }
+        //     //可能出现距离还不够,但是找不到路了?
+        //     }
+        // }else {
+        //     //如果进walk状态了但是没有英雄能打了,就说明所有英雄都g了,就说明出结果了,
+        //     combatEndTrigger?.Invoke(champion.IsAllyChampion);
+        // }
     }
-    public void FindPathTowardsNearestOpponent(Vector3 newTarget,bool alreadyHasTarget = false) {
-        Vector3 target = alreadyHasTarget? newTarget : champion.GetNearestOpponentChampionPos(out targetChampion, out isAChampionAvailable);
-        PathRequestManager.RequestPath(champion.transform.position,target,OnPathFound);
+    public void FindPathTowardsTarget(Vector3 target) {
+        PathRequestManager.RequestPath(champion.transform.position,target,OnFixedPathFound);
+    }
+    public void FindPathTowardsNearestOpponent(Vector3 newTarget) {
+        Vector3 target = champion.GetNearestOpponentChampionPos(out targetChampion, out isAChampionAvailable);
+        PathRequestManager.RequestPath(champion.transform.position,target,OnDynamicPathFound);
     }
     public void TriggerAttackBehavior() {
         attackTrigger?.Invoke(targetChampion);
     }
-    IEnumerator FollowPath() {
+    IEnumerator FollowPathToFixedTarget(Champion targetChampion) {
+        if(path.Length > 0) {
+            animator.SetTrigger("Walk");
+            Vector3 currentWayPoint = path[0];
+            champion.QuadStateChange(currentWayPoint);//执行一次,改quad的状态
+            while(true) {
+                if(champion.transform.position == currentWayPoint) {
+                    champion.transform.LookAt(currentWayPoint);
+                    MoveToTarget(targetChampion.transform.position,targetChampion,true,true);
+                    yield break;
+                }else {
+                    champion.transform.position = Vector3.MoveTowards(champion.transform.position,currentWayPoint,speed * Time.deltaTime);
+                    champion.transform.LookAt(currentWayPoint);
+                    yield return null;
+                }
+            }
+        }else {
+            CheckNearestOpponent();
+        }
+    }
+    IEnumerator FollowDynamicPath() {
         //不应该这么写
         //逻辑应该是这样的:
         //找到路之后,我先标记我要走的格子walkable = false
@@ -620,7 +680,7 @@ public class ChampionWalk: StateBase<ChampionState> {
             while(true) {
                 if(champion.transform.position == currentWayPoint) {
                     champion.transform.LookAt(currentWayPoint);
-                    CheckNearestOpponent(isForceEntering);
+                    CheckNearestOpponent();
                     yield break;
                 }else {
                     champion.transform.position = Vector3.MoveTowards(champion.transform.position,currentWayPoint,speed * Time.deltaTime);
@@ -671,6 +731,7 @@ public class ChampionDead: StateBase<ChampionState> {
     }
     public override void OnEnter() {
         champion.LastQuadThisChampionStand.OnChampionLeave(champion);
+        champion.StopAllCoroutines();
         champion.gameObject.SetActive(false);
         champion.IsActive = false;
     }
