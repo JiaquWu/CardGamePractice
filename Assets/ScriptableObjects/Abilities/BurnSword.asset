@@ -12,3 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6ede365a1881d4b4ab79b4fff1404c7c, type: 3}
   m_Name: BurnSword
   m_EditorClassIdentifier: 
+  buffFactory: {fileID: 11400000, guid: 5f0b4e1569fcded47b71e6d15a45615d, type: 2}

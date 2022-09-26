@@ -14,7 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   buffType: 0
   data:
-    damagePerTick: []
-    tickTime: 0
-    duration: 0
-    numberOfAttacks: 0
+    damagePerTick:
+    - 10
+    - 20
+    - 30
+    tickTime: 0.5
+    duration: 1
+    numberOfAttacks: 2

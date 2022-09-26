@@ -1357,7 +1357,7 @@ MonoBehaviour:
   traits:
   - {fileID: 11400000, guid: a32709b7a9a766040a0f03a44124e154, type: 2}
   - {fileID: 11400000, guid: cc9a36741b2e38c41ae54f3cbf3e9ee6, type: 2}
-  championAbility: {fileID: 11400000, guid: 1a4557ab84823bc458331b14c1ed420f, type: 2}
+  championAbility: {fileID: 11400000, guid: 8436d000f08f46145a627749fd5c7dd0, type: 2}
 --- !u!1001 &3559589753460228449
 PrefabInstance:
   m_ObjectHideFlags: 0

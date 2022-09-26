@@ -16,7 +16,7 @@ MonoBehaviour:
   maxHealthPointsList:
   - 500
   - 800
-  - 1000
+  - 1200
   maxManaPointsList:
   - 100
   - 100

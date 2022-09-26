@@ -25,8 +25,9 @@ public class BurnSwordBuff : Buff<BurnSwordBuffData>
        target.additionalAttackEffect -= BurnSword;
     }
     private void BurnSword(Champion castChampion,Champion targetChampion) {
-        Debug.Log("?????????????????????");
-        targetChampion.StartCoroutine(TakeBurnDamage(castChampion,targetChampion));
+        if(targetChampion.gameObject.activeSelf) {
+            targetChampion.StartCoroutine(TakeBurnDamage(castChampion,targetChampion));
+        }
         count ++;
         if(count >= data.numberOfAttacks) {
             Remove();
@@ -37,7 +38,6 @@ public class BurnSwordBuff : Buff<BurnSwordBuffData>
         while(Time.time - timer < data.duration) {
             yield return new WaitForSeconds(data.tickTime);
             targetChampion.TakeDamage(castChampion,DamageType.MAGIC, data.damagePerTick[castChampion.Level]);
-            Debug.Log("我这里应该掉血啊!");
         }
     }
     public override void UpdateBuff(int level)

@@ -1,8 +1,23 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+public enum PoolObjectType {
+    ABILITY_SPHERE_TRIGGER,
+}
 public class PoolManager : SingletonManager<PoolManager> {
+    [SerializeField]
+    private GameObject abilitySphereTrigger;
+    private Dictionary<PoolObjectType,GameObject> poolObjectDict;
+    protected override void Init() {
+        poolObjectDict = new Dictionary<PoolObjectType, GameObject>() {
+            {PoolObjectType.ABILITY_SPHERE_TRIGGER,abilitySphereTrigger}
+        };
+        foreach (PoolObjectType type in poolObjectDict.Keys) {
+            if(poolObjectDict[type] != null) {
+                CreatePool(poolObjectDict[type], 10);//10个够了
+            }
+        }
+    }
     public Dictionary<int,Queue<ObjectInstance>> poolDictionary = new Dictionary<int, Queue<ObjectInstance>>();//储存所有对象池的字典
     public void CreatePool(GameObject prefab, int poolSize) {//先创建一个对象池,注册到字典里面
         int poolKey = prefab.GetInstanceID();
@@ -23,6 +38,19 @@ public class PoolManager : SingletonManager<PoolManager> {
             ObjectInstance objectToReuse = poolDictionary[poolKey].Dequeue();
             poolDictionary[poolKey].Enqueue(objectToReuse);
             objectToReuse.Reuse(position,rotation);//拿出来之后执行初始化函数       
+        }
+    }
+    public GameObject ReuseObject(PoolObjectType type,Vector3 position, Quaternion rotation) {//如果有这个对象池在字典里面,那么就拿一个出来用,并且调用reuse函数
+        if(poolObjectDict == null || poolObjectDict[type] == null) return null;
+        int poolKey = poolObjectDict[type].GetInstanceID();
+        if(poolDictionary.ContainsKey(poolKey)) {
+            ObjectInstance objectToReuse = poolDictionary[poolKey].Dequeue();
+            poolDictionary[poolKey].Enqueue(objectToReuse);
+            objectToReuse.Reuse(position,rotation);//拿出来之后执行初始化函数      
+            return objectToReuse.GameObject;
+        }else {
+            Debug.LogWarning("gameobject is missing");
+            return null;
         }
     }
     public GameObject GetInstance(GameObject prefab) {//只是想得到一个实例,而不调用reuse函数,也许会用上

@@ -288,6 +288,7 @@ public class Champion : MonoBehaviour {//棋子类,
         championStateMachine.AddTriggerTransition("BattleStart",ChampionState.IDLE,ChampionState.WALK);//战斗开始,开始行动
         championStateMachine.AddTriggerTransition("Attack",ChampionState.WALK,ChampionState.ATTACK);
         championStateMachine.AddTriggerTransition("TargetDead",ChampionState.ATTACK,ChampionState.WALK);
+        championStateMachine.AddTriggerTransition("ForceToWalk",ChampionState.ATTACK,ChampionState.WALK);
         championStateMachine.AddTriggerTransition("OnPreparationQuad",ChampionState.IDLE,ChampionState.PREPARE);
         championStateMachine.AddTriggerTransition("OnDeployQuad",ChampionState.PREPARE,ChampionState.IDLE);
 
@@ -311,43 +312,37 @@ public class Champion : MonoBehaviour {//棋子类,
                 trait.Remove(this);//不用担心还没有加就remove了,因为remove之前要检测加过没有
             }
         }
-        //好像不用管具体是什么buff了
-        // if(trait is WarriorTrait) {
-        //     //
-        //     if(traitLevel == -1) {
-        //         //取消激活
-        //         Debug.Log("i'm no longer a warrior!");
-        //     }else {
-        //         Debug.Log("i'm a warrior!");
-        //     }
-        // }
-        // if(trait is HumanTrait) {
-        //     //
-        //     if(traitLevel == -1) {
-        //         //取消激活
-        //         Debug.Log("i'm no longer a Human!");
-        //     }else {
-        //         Debug.Log("i'm a Human!");
-        //     }
-        // }
-        // if(trait is OrcTrait) {
-        //     //
-            
-        //     if(traitLevel == -1) {
-        //         //取消激活
-        //         Debug.Log("i'm no longer a Orc!");
-        //     }else {
-        //         Debug.Log("i'm a Orc!");
-        //     }
-        // }
     }
     private void ResetAllTraitsLevel() {
         foreach (TraitBase trait in traits) {
             UpdateTraitLevelToChampion(trait,-1);
         }
     }
+    public void ForceAttackTarget(Champion targetChampion) {
+        StopAllCoroutines();
+        if(championStateMachine.ActiveState.name == ChampionState.WALK) {
+            championWalkState.MoveToTarget(targetChampion.transform.position,targetChampion,true);        
+        }else if(championStateMachine.ActiveState.name == ChampionState.ATTACK) {
+            if(IsTargetInAttackRange(targetChampion.transform.position)) {
+                championAttackState.UpdateTargetChampion(targetChampion);
+            }else {
+                championWalkState.MoveToTarget(targetChampion.transform.position,targetChampion,true,true);
+                championWalkState.isForceEntering = true;
+                championStateMachine.Trigger("ForceToWalk");
+            }
+        }
+    }
+    public bool IsTargetInAttackRange(Vector3 targetPos) {
+        return Vector3.Distance(targetPos,transform.position) <= CurrentChampionStats.attackRange.Value * MapManager.Instance.CurrentMapConfiguration.ScaleRatio;
+    }
+    public void CheckIfTargetIsInRange() {
+        if(championStateMachine.ActiveState.name == ChampionState.ATTACK) {
+            if(!IsTargetInAttackRange(championAttackState.targetChampion.transform.position)) {
+                ForceAttackTarget(championAttackState.targetChampion);//就是说如果攻击的目标半路跑了，那么要追ta
+            }
+        }
+    }
     public void HitTarget() {
-        Debug.Log("哥们儿攻击呢");
         championAttackState.HitTarget();
     }
     public void OnHit(Champion champion) {
@@ -501,26 +496,7 @@ public class Champion : MonoBehaviour {//棋子类,
         }
     }
 }
-public class ChampionAbility:ScriptableObject {//每个英雄的大招不一样
-    public virtual void Execute(Champion champion) {
-        
-    }
-}
-public class ChampionBuffAbility : ChampionAbility {
-    public BuffFactory buffFactory;
-    public Buff buff;
-    public override void Execute(Champion champion) {
-        Apply(champion);
-    }
-    public virtual void Apply(Champion champion) {
-        if(buffFactory != null) {
-            if(buff == null) {
-                buff = buffFactory.GetBuff(champion);
-            }
-            buff.Apply(champion.Level);
-        }
-    }
-}
+
 public class ChampionIdle : StateBase<ChampionState> {//idle是已经在场上了,prepare是还在下面,播放动画都是idle,但是性质不一样
     Animator animator;
     Champion champion;
@@ -563,7 +539,8 @@ public class ChampionWalk: StateBase<ChampionState> {
     Champion targetChampion;
     Action<Champion> attackTrigger;
     Action<bool> combatEndTrigger;
-    bool isWalking;
+    public bool isForceEntering;
+    private Champion forceTargetChampion;
     bool isAChampionAvailable;
     public ChampionWalk(Champion champion, Animator animator,Action<bool> combatEndTrigger, Action<Champion> attackTrigger, bool needsExitTime) : base(needsExitTime) {
         mono = champion;
@@ -577,7 +554,10 @@ public class ChampionWalk: StateBase<ChampionState> {
         //没有检测是否存在,为了省事先这样,手动配的时候需要确保有walk
         //需要请求一个寻路,需要知道终点是啥
         //对于ally来说,终点应该是离自己最近的enemy,反之亦然
-        CheckNearestOpponent();
+        Debug.Log("我进来了吗？" + isForceEntering);
+        if(!isForceEntering) {
+            CheckNearestOpponent();
+        }  
     }
     public override void OnLogic() {
         
@@ -585,6 +565,7 @@ public class ChampionWalk: StateBase<ChampionState> {
     }
     public override void OnExit() {
         animator.ResetTrigger("Walk");
+        isForceEntering = false;
     }
     public void OnPathFound(Vector3[] newPath, bool pathSuccessful) {
         //寻路寻到了就开始走
@@ -594,25 +575,33 @@ public class ChampionWalk: StateBase<ChampionState> {
             mono.StartCoroutine(FollowPath());
         }
     }
-    public void CheckNearestOpponent() {
-        Vector3 target = champion.GetNearestOpponentChampionPos(out targetChampion,out isAChampionAvailable);
+    public void CheckNearestOpponent(bool alreadyHasTarget = false) {
+        if(!alreadyHasTarget || forceTargetChampion == null) {
+            Vector3 target = champion.GetNearestOpponentChampionPos(out targetChampion,out isAChampionAvailable);
+            MoveToTarget(target,targetChampion,isAChampionAvailable,alreadyHasTarget);
+        }else {
+            MoveToTarget(forceTargetChampion.transform.position,forceTargetChampion,isAChampionAvailable,alreadyHasTarget);
+        }
+    }
+    public void MoveToTarget(Vector3 targetPos,Champion targetChampion,bool isAChampionAvailable,bool alreadyHasTarget = false) {
+        if(alreadyHasTarget) {
+            forceTargetChampion = targetChampion;
+            this.targetChampion = targetChampion;
+        }
         if(isAChampionAvailable) {
-            if(Vector3.Distance(target,champion.transform.position) 
-            <= champion.CurrentChampionStats.attackRange.Value * MapManager.Instance.CurrentMapConfiguration.ScaleRatio) {
-                champion.transform.LookAt(targetChampion.transform);
+            if(champion.IsTargetInAttackRange(targetPos)) {
                 TriggerAttackBehavior();
             }else {
-                FindPathTowardsNearestOpponent();
+                FindPathTowardsNearestOpponent(targetPos,alreadyHasTarget);
             //可能出现距离还不够,但是找不到路了?
             }
         }else {
             //如果进walk状态了但是没有英雄能打了,就说明所有英雄都g了,就说明出结果了,
             combatEndTrigger?.Invoke(champion.IsAllyChampion);
         }
-        
     }
-    public void FindPathTowardsNearestOpponent() {
-        Vector3 target = champion.GetNearestOpponentChampionPos(out targetChampion, out isAChampionAvailable);
+    public void FindPathTowardsNearestOpponent(Vector3 newTarget,bool alreadyHasTarget = false) {
+        Vector3 target = alreadyHasTarget? newTarget : champion.GetNearestOpponentChampionPos(out targetChampion, out isAChampionAvailable);
         PathRequestManager.RequestPath(champion.transform.position,target,OnPathFound);
     }
     public void TriggerAttackBehavior() {
@@ -630,7 +619,8 @@ public class ChampionWalk: StateBase<ChampionState> {
             champion.QuadStateChange(currentWayPoint);//执行一次,改quad的状态
             while(true) {
                 if(champion.transform.position == currentWayPoint) {
-                    CheckNearestOpponent();
+                    champion.transform.LookAt(currentWayPoint);
+                    CheckNearestOpponent(isForceEntering);
                     yield break;
                 }else {
                     champion.transform.position = Vector3.MoveTowards(champion.transform.position,currentWayPoint,speed * Time.deltaTime);
@@ -645,7 +635,7 @@ public class ChampionWalk: StateBase<ChampionState> {
 }
 public class ChampionAttack: StateBase<ChampionState> {
     private Animator animator;
-    private Champion targetChampion;
+    public Champion targetChampion;
     private Champion champion;
     public ChampionAttack(Champion champion, Animator animator, bool needsExitTime) : base(needsExitTime) {
         this.animator = animator;
@@ -653,6 +643,7 @@ public class ChampionAttack: StateBase<ChampionState> {
     }
     public void UpdateTargetChampion(Champion target) {
         targetChampion = target;
+        champion.transform.LookAt(targetChampion.transform);
     }
     public void HitTarget() {
         //champion的动画判断出champion打到人了,具体逻辑在这里执行
