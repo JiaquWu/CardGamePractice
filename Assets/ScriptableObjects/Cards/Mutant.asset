@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: Mutant
   m_EditorClassIdentifier: 
   cost: 1
-  cardSprite: {fileID: 21300000, guid: f60d91b77977dd749975e62500196d0e, type: 3}
+  cardSprite: {fileID: 21300000, guid: f1474bfcd99a162439bbd88198db27c7, type: 3}
   championPrefab: {fileID: 8896579308038108716, guid: 2f82dd61b66209f4c9a3b20c7e02d899,
     type: 3}

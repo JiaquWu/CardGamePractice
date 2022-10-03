@@ -23,7 +23,7 @@ public class GameRulesManager {
         {4,12},
         {5,10},
     };
-    public static Dictionary<int,int> experienceRequirementByLevel = new Dictionary<int, int>() {//key级升到下一级还需要value点经验
+    public static Dictionary<int,int> experienceRequirementByLevel = new Dictionary<int, int>() {//need to have {value} exp to level up in {key} level
         {1,2},
         {2,4},
         {3,6},

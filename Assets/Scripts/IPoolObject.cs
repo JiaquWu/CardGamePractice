@@ -4,5 +4,5 @@ using UnityEngine;
 
 public interface IPoolObject {
     void OnObjectReuse();
-    void Destroy();//让物体隐形
+    void Destroy();//make it invisible?
 }

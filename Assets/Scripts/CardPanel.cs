@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-//需要手动在unity中关闭
 public class CardPanel : PanelBase {
     List<CardButton> cardButtons = new List<CardButton>();
     [SerializeField]
@@ -21,7 +20,7 @@ public class CardPanel : PanelBase {
         GameEventsManager.StartListening(GameEventTypeInt.UPDATE_EXP,UpdateExpText);
         BaseOnLoad();
         RefreshCardPanel();
-        GameEventsManager.TriggerEvent(GameEventTypeInt.UPDATE_MONEY,Player.Instance.Money);//这三个需要初始化刷新
+        GameEventsManager.TriggerEvent(GameEventTypeInt.UPDATE_MONEY,Player.Instance.Money);//init!
         GameEventsManager.TriggerEvent(GameEventTypeInt.UPDATE_EXP,Player.Instance.CurrentExp);
         GameEventsManager.TriggerEvent(GameEventTypeInt.UPDATE_LEVEL,Player.Instance.CurrentLevel);
     }
@@ -54,7 +53,6 @@ public class CardPanel : PanelBase {
     void UpdateExpText(GameEventTypeInt ev,int currentExp) {
         if(expText != null) {
             expText.text = "Exp : " + currentExp + " / " + GameRulesManager.experienceRequirementByLevel[Player.Instance.CurrentLevel];
-            //这里没有检测后面字典是否能找到是因为触发这个函数的代码有检测，但是这样还是不是很好
         }
     }
 }

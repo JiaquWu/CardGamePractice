@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: Zombie
   m_EditorClassIdentifier: 
   cost: 2
-  cardSprite: {fileID: 21300000, guid: bcf44b4a103e1ef4eb4b69a67535c85e, type: 3}
+  cardSprite: {fileID: 21300000, guid: f47b38f5a7ba7d74aa498fb257e4256b, type: 3}
   championPrefab: {fileID: 5296387255904326596, guid: 7bb093cdff9ccc74c8df18de05ae1f70,
     type: 3}

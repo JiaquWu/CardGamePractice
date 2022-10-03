@@ -26,3 +26,4 @@ MonoBehaviour:
       moveSpeed: 0
       moveTimePerCount: 0
       moveIntervalPercount: 0
+    duration: 10

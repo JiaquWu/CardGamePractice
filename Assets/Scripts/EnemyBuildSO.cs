@@ -9,6 +9,6 @@ public class EnemyBuildSO : ScriptableObject {
 [Serializable]
 public struct EnemyUnit {
     public GameObject enemyGameObject;
-    public Vector2 quadToStayCoordinate;//从字典中找
-    public int level;//enemy等级,0为1级,2为3级
+    public Vector2 quadToStayCoordinate;
+    public int level;//0 = 1 star
 }

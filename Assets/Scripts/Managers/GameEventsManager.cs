@@ -32,8 +32,8 @@ public enum GameEventTypeVoid {
     UPDATE_CURRENT_TRAITS
 }
 public enum GameEventTypeInt {
-    GAIN_EXPERIENCE,//买经验
-    LEVEL_UP,//升级
+    GAIN_EXPERIENCE,
+    LEVEL_UP,
     UPDATE_MONEY,
     UPDATE_LEVEL,
     UPDATE_EXP,
@@ -94,7 +94,7 @@ public class GameEventsManager : SingletonManager<GameEventsManager> {
     public static void StartListening(GameEventTypeVoid eventTypeVoid,UnityAction<GameEventTypeVoid> listener) {
         InitDict();
         VoidUnityEvent unityEvent = null;
-        if(voidEventDict.TryGetValue(eventTypeVoid,out unityEvent) == false) {//如果字典里面没有就加一个新的,如果有的话就被拿出来赋给unityEvent了
+        if(voidEventDict.TryGetValue(eventTypeVoid,out unityEvent) == false) {
             unityEvent = new VoidUnityEvent();
             voidEventDict.Add(eventTypeVoid,unityEvent);
         }
@@ -146,7 +146,7 @@ public class GameEventsManager : SingletonManager<GameEventsManager> {
         unityEvent.AddListener(listener);
 ;    }
     public static void StopListening(GameEventTypeVoid eventTypeVoid,UnityAction<GameEventTypeVoid> listener) {
-        if(voidEventDict != null && voidEventDict.TryGetValue(eventTypeVoid,out VoidUnityEvent unityEvent)) {//只有字典不是空的并且能查找到的时候才能拿出来
+        if(voidEventDict != null && voidEventDict.TryGetValue(eventTypeVoid,out VoidUnityEvent unityEvent)) {
             unityEvent.RemoveListener(listener);
         }
     }

@@ -19,7 +19,6 @@ public class TraitPanel : PanelBase {
     private void UpdateCurrentTraitsUI(GameEventTypeVoid ev) {
         foreach (TraitBase trait in AllyChampionManager.Instance.traitsDict.Keys) {
             if(!traitTextDict.ContainsKey(trait)) {
-                //如果字典里面没有,说明要新加上一个羁绊,要新生成一个
                 traitTextDict.Add(trait,InstantiateText());
             }
             int count = AllyChampionManager.Instance.GetTraitChampionCount(trait);

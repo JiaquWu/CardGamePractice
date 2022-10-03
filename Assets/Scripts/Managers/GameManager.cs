@@ -5,15 +5,15 @@ using UnityEngine;
 using FSM;
 [Serializable]
 public enum GameState {
-    INIT,//开始游戏之前的初始化
-    PLAY,//整个游戏流程
-    IDLE//游戏的默认界面,待定
+    INIT,//before playing it 
+    PLAY,//core state
+    IDLE//tbd
 }
 public enum OnPlayState {
     INIT,
     DEPLOY,
     COMBAT,
-    BONUS,//选秀 待定
+    BONUS,
     EXIT
 }
 public class GameManager : SingletonManager<GameManager> {
@@ -25,7 +25,7 @@ public class GameManager : SingletonManager<GameManager> {
 
     public StateMachine<GameState, string> GameManagerStateMachine => gameManagerStateMachine;
     public StateMachine<GameState, OnPlayState, string> PlayState  => playState;
-    public static bool isPlayStateStart;//游戏是否开始了
+    public static bool isPlayStateStart;
     public bool isInCombat => playState.ActiveState.name == OnPlayState.COMBAT;
     private int roundCount;
     public int RoundCount => roundCount;
@@ -79,8 +79,7 @@ public class GameManager : SingletonManager<GameManager> {
         }
     }
     public void OnOnPlayStateChange(OnPlayStateSelector selector) {
-        //如果不在这个阶段在游戏里面是不可能进入这个阶段的
-        //if(playState.ActiveState == null) return;//这个方法要改statemachine里面activestate的代码,不去触发报错
+
         switch (selector.state) {
             case OnPlayState.DEPLOY:
             playState.Trigger("triggerDeploy");
@@ -97,7 +96,7 @@ public class GameManager : SingletonManager<GameManager> {
         roundCount ++;
     }
     public EnemyBuildSO GetCurrentEnemyBuild() {
-        if(roundCount >= 1) {//-1是因为回合数一开始就是1
+        if(roundCount >= 1) {
             return enemyBuildSequence.GetCurrentEnemyBuild(roundCount-1);
         }
         return null;
@@ -126,9 +125,9 @@ public class OnPlayStateDeploy : StateBase<OnPlayState> {
     
     }
     public override void OnEnter() {
-        GameManager.Instance.AddRoundCount();//每次进入都加一回合数
+        GameManager.Instance.AddRoundCount();
         GameEventsManager.TriggerEvent(GameEventTypeVoid.ENTER_DEPLOY_STATE);
-        if(GameManager.isPlayStateStart == false) GameManager.isPlayStateStart = true;//有些事件需要第二次进入deploy才会触发
+        if(GameManager.isPlayStateStart == false) GameManager.isPlayStateStart = true;
     }
     public override void OnExit() {
         GameEventsManager.TriggerEvent(GameEventTypeVoid.EXIT_DEPLOY_STATE);
@@ -171,7 +170,7 @@ public class OnPlayStateBonus : StateBase<OnPlayState> {
 
 public class InitState : StateBase<GameState> {
     public InitState(bool needsExitTime, bool isGhostState = false) : base(needsExitTime, isGhostState) {
-        //可能会是ghost state,只是初始化要做一些事情放在这个地方
+        //might be a ghost state, do some init stuff?
     }
     public override void OnEnter() {
         GameEventsManager.TriggerEvent(GameEventTypeVoid.ENTER_INIT_STATE);

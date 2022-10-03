@@ -5,7 +5,6 @@ using UnityEngine;
 public static class Extensions {
     
     public static Dictionary<TKey,TValue> MergeTwoDictionary<TKey,TValue>(this Dictionary<TKey,TValue> myDict,Dictionary<TKey,TValue> secondDict) {
-        //myDict不用传进来,默认是this
         Dictionary<TKey,TValue> res = new Dictionary<TKey, TValue>();
         foreach (var item in myDict) {
             if(!res.ContainsKey(item.Key)) {
@@ -20,7 +19,7 @@ public static class Extensions {
         return res;
     }
     public static bool IsInRange(this int myInt,int min,int max) {
-        return myInt >= min && myInt < max;//取下不取上,在trait的使用场景中,如果达到max就说明到了一个新level
+        return myInt >= min && myInt < max;//will be at a new level if it's equal to max
     }
     public static int GetIndexInArray(this int count,int[] arr) {
         Debug.Log("arr.Length" + arr.Length );

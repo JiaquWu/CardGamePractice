@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 
 public class Quad : MonoBehaviour {
-    private bool isChampionEnteredOnMouse;//鼠标带着英雄进来了
+    private bool isChampionEnteredOnMouse;
     private Champion championOnThisQuad;
     public Champion ChampionOnThisQuad => championOnThisQuad;
     public Node node;
@@ -25,7 +25,7 @@ public class Quad : MonoBehaviour {
         EnableEmissionShader(false);
     }
     public virtual void OnMouseEnter() {
-        if(InputManager.Instance.IsLeftMouseButtonPressed) return;//只有鼠标左键没按的时候才会有用
+        if(InputManager.Instance.IsLeftMouseButtonPressed) return;
         EnableEmissionShader(true);
     }
     public virtual void OnMouseDown() {
@@ -35,8 +35,8 @@ public class Quad : MonoBehaviour {
         if(InputManager.Instance.IsLeftMouseButtonPressed) return;
         EnableEmissionShader(false);
     }
-    public void OnChampionEnterOnMouse(Champion champion) {//玩家拖着英雄到格子上面的时候
-        if(isChampionEnteredOnMouse || GameManager.Instance.PlayState.ActiveState.name != OnPlayState.DEPLOY) return;//如果已经在上面了就不用执行后面的了
+    public void OnChampionEnterOnMouse(Champion champion) {
+        if(isChampionEnteredOnMouse || GameManager.Instance.PlayState.ActiveState.name != OnPlayState.DEPLOY) return;
         isChampionEnteredOnMouse = true;
         EnableEmissionShader(true);
     }
@@ -46,7 +46,7 @@ public class Quad : MonoBehaviour {
         EnableEmissionShader(false);
     }
     public void OnChampionStay(Champion champion,bool isSwaping = false) {
-        //鼠标松开,让英雄站在上面,这里的逻辑应该是,如果自己的上面已经有一个英雄了,那应该让这个英雄的位置到来的这个英雄之前的位置上去     
+        //check swap
         if(championOnThisQuad != null && !isSwaping && !GameManager.Instance.isInCombat) {
             champion.OnChampionSwap(championOnThisQuad);
         }
@@ -71,16 +71,16 @@ public class Quad : MonoBehaviour {
     }
 }
 
-public class Node : IHeapItem<Node> {//a星算法相关
+public class Node : IHeapItem<Node> {//a star algorithm related
     public bool walkable;
     public Vector3 worldPosition;
     public int gridX;
-    public int gridY;//这里和生成坐标里面的不一样,因为preparation里面的node和算法不相关
+    public int gridY;//!= coordinate
     public int gCost;
     public int hCost;
     int heapIndex;
     public Node parent;
-    public Quad attachedQuad;//这样node就知道自己在哪个quad上面
+    public Quad attachedQuad;
     public Node(bool _walkable, Vector3 _worldPos, int _gridX, int _gridY,Quad _attachedQuad) {
         walkable = _walkable;
         worldPosition = _worldPos;
@@ -88,7 +88,7 @@ public class Node : IHeapItem<Node> {//a星算法相关
         gridY = _gridY;
         attachedQuad = _attachedQuad;
     }
-    public Node(Vector3 _worldPos,Quad _attachedQuad) {//不参与寻路的node
+    public Node(Vector3 _worldPos,Quad _attachedQuad) {
         worldPosition = _worldPos;
         attachedQuad = _attachedQuad;
     }
@@ -108,6 +108,6 @@ public class Node : IHeapItem<Node> {//a星算法相关
         if(compare == 0) {
             compare = hCost.CompareTo(nodeToCompare.hCost);
         }
-        return -compare;//更高的compare意味着消耗更大,所以在比较来看更不好
+        return -compare;//more cost is not good
     }
 }

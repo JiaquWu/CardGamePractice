@@ -13,9 +13,7 @@ public static class DamageHandler {
         ChampionStats stats = champion.CurrentChampionStats;
         switch (type) {
             case DamageType.PHYSICS:
-            //一个简单的伤害计算办法: 护甲/护甲+100 = 物理减伤率
-            //(1-物理减伤率) * 伤害 = 最终伤害
-            //法伤同理
+            //a simple formula
             damage = Probability.Chance(stats.criticalChance.Value)? damage * stats.criticalDamage.Value : damage;
             result = Mathf.RoundToInt((1-(stats.armor.Value / (stats.armor.Value + 100))) * damage);
             break;
@@ -23,7 +21,6 @@ public static class DamageHandler {
             result = Mathf.RoundToInt((1-(stats.magicResistance.Value / (stats.magicResistance.Value + 100))) * damage);
             break;
             case DamageType.PURE:
-            //不用管,因为上面初始化了
             break;
         }
         return result;

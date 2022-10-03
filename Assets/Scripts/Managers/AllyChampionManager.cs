@@ -6,11 +6,11 @@ using UnityEngine;
 
 public class AllyChampionManager : ChampionManagerBase<AllyChampionManager> {
     private List<Champion> championsBoughtLastCombatRound;
-    private static int spaceTakenByChampions;//已经占用的人口数量
-    public static int SpaceTakenByChampions => spaceTakenByChampions;//在考虑要不要把这个字段换到其他位置?不确定 再看看
+    private static int spaceTakenByChampions;
+    public static int SpaceTakenByChampions => spaceTakenByChampions;
     protected override void Init() {
         base.Init();
-        spaceTakenByChampions = 0;//初始状态下没英雄在上面
+        spaceTakenByChampions = 0;
         championsBoughtLastCombatRound = new List<Champion>();
         GameEventsManager.StartListening(GameEventTypeVoid.ENTER_DEPLOY_STATE,OnEnterDeployState);
         GameEventsManager.StartListening(GameEventTypeVoid.ENTER_COMBAT_STATE,OnEnterCombatState);
@@ -22,7 +22,7 @@ public class AllyChampionManager : ChampionManagerBase<AllyChampionManager> {
     public override void RegisterChampion(Champion champion) {
         base.RegisterChampion(champion);
         if(GameManager.Instance.PlayState.ActiveState.name == OnPlayState.COMBAT) {
-            championsBoughtLastCombatRound.Add(champion);//如果在战斗中买的,要加进来
+            championsBoughtLastCombatRound.Add(champion);
         }
         CheckChampionUpgrade(champion);
     }
@@ -81,16 +81,15 @@ public class AllyChampionManager : ChampionManagerBase<AllyChampionManager> {
             GameEventsManager.TriggerEvent(GameEventTypeChampion.CHAMPION_UPGRADE_LEVEL_2,championLevel1[0]);
         }
     }
-    public void OnSpaceChange(int modifier) {//不能写成静态方法,要不然不需要实例
-        //如果新英雄进来,那么人口增加,如果有英雄somehow出去,那就减少
+    public void OnSpaceChange(int modifier) {
         spaceTakenByChampions += modifier;
     }
     protected override void OnEnterCombatState(GameEventTypeVoid ev) {
-        if(championsBoughtLastCombatRound.Count > 0) {//战斗开始的时候清空
+        if(championsBoughtLastCombatRound.Count > 0) {
             championsBoughtLastCombatRound.Clear();
         }
     }
-    protected override void OnEnterDeployState(GameEventTypeVoid ev) {//开始买东西之前把每个champion都检查一遍
+    protected override void OnEnterDeployState(GameEventTypeVoid ev) {
         if(championsBoughtLastCombatRound == null && championsBoughtLastCombatRound.Count == 0) return;
         championsBoughtLastCombatRound.Distinct().ToList();
         foreach (var item in championsBoughtLastCombatRound) {

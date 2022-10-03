@@ -24,13 +24,12 @@ public class Unit : MonoBehaviour {
             while(true) {
                 if(transform.position == currentWayPoint) {
                     targetIndex ++;
-                    if(targetIndex >= path.Length) {//大于等于说明超出范围了
-                        yield break;//中止协程
+                    if(targetIndex >= path.Length) {
+                        yield break;
                     }
                     currentWayPoint = path[targetIndex];
 
                 }
-                //那么这里就要移动这个unit,
                 transform.position = Vector3.MoveTowards(transform.position,currentWayPoint,speed * Time.deltaTime);
                 yield return null;
             }

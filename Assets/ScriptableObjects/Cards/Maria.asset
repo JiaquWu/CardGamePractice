@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: Maria
   m_EditorClassIdentifier: 
   cost: 2
-  cardSprite: {fileID: 21300000, guid: 4f5db539a2c4123408812910d2678080, type: 3}
+  cardSprite: {fileID: 21300000, guid: 30cb8e7e98d3e5f4fa3b4b0166750d3e, type: 3}
   championPrefab: {fileID: 2633152036119657008, guid: 6ebb54b92a943f7448939ccffe9bdd67,
     type: 3}

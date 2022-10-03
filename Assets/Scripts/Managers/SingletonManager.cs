@@ -11,14 +11,14 @@ where T:SingletonManager<T> {
                 instance = FindObjectOfType<T>();
                 if(instance == null) {
                     GameObject go = new GameObject();
-                    instance = go.AddComponent<T>();//这里会立即执行awake
+                    instance = go.AddComponent<T>();
                     Debug.LogWarning(string.Format("There was no {0} object in any of the currently loaded scenes",instance));
                 }else {
-                    instance.Init();//是空的,并且是被找到的而不是新建的,所以才需要init初始化
+                    instance.Init();
                 }
                 
             }
-            return instance;//之后拿到它都不是第一次了
+            return instance;
         }
     }
     protected void Awake() {

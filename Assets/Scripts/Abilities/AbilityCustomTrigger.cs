@@ -18,6 +18,7 @@ public class AbilityCustomTrigger : MonoBehaviour,IPoolObject {
         if(data.needMove) {
             StartCoroutine(TriggerMove());
         }
+        StartCoroutine(DestoryCountDown());
     }
     
     private void OnTriggerEnter(Collider other) {
@@ -34,9 +35,14 @@ public class AbilityCustomTrigger : MonoBehaviour,IPoolObject {
             yield return data.moveData.moveIntervalPercount;
         }
     }
+    IEnumerator DestoryCountDown() {
+        yield return new WaitForSeconds(data.duration);
+        gameObject.SetActive(false);
+    }
     public void OnObjectReuse() {
         triggerEvent = null;
         data = null;
+        StopAllCoroutines();
     }
 
     public void Destroy() {
@@ -44,7 +50,7 @@ public class AbilityCustomTrigger : MonoBehaviour,IPoolObject {
     }
 }
 [Serializable]
-public class CapsuleTriggerData {//sphere碰撞感觉应该能实现大部分的效果了，如果不行再计算筛除一些
+public class CapsuleTriggerData {
     public Vector3 initiatePositionOffset;
     public Vector3 initiateRotationOffset;
     public Vector3 center;
@@ -53,12 +59,12 @@ public class CapsuleTriggerData {//sphere碰撞感觉应该能实现大部分的
     public int direction;//The value can be 0, 1 or 2 corresponding to the X, Y and Z axes, respectively.
     public bool needMove;
     public TriggerMoveData moveData;
+    public float duration;
 }
 [Serializable]
 public class TriggerMoveData {
-    //怎么移动？
-    public int moveCount;//1 = 一次性
-    public Vector3 moveDirection;//
+    public int moveCount;//1 = move once
+    public Vector3 moveDirection;
     public float moveSpeed;
     public float moveTimePerCount;
     public float moveIntervalPercount;

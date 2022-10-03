@@ -8,22 +8,22 @@ public class PathRequestManager : SingletonManager<PathRequestManager> {
     PathRequest currentPathRequest;
     bool isProcessingPath;
     public static void RequestPath(Vector3 pathStart, Vector3 pathEnd, Action<Vector3[], bool> callback) {
-        PathRequest newRequest = new PathRequest(pathStart,pathEnd,callback);//谁想请求一条道路,就新建一个pathrequest,其中callback是找到之后执行的方法
+        PathRequest newRequest = new PathRequest(pathStart,pathEnd,callback);
         Instance.pathRequestQueue.Enqueue(newRequest);
         Instance.TryProcessNext();
     }
     
     void TryProcessNext() {
-        if(!isProcessingPath && pathRequestQueue.Count > 0) {//如果没有其他正在找的路,并且有路可找
-            currentPathRequest = pathRequestQueue.Dequeue();//那么就拿一个出来找
-            isProcessingPath = true;//现在正在找路!
+        if(!isProcessingPath && pathRequestQueue.Count > 0) {
+            currentPathRequest = pathRequestQueue.Dequeue();
+            isProcessingPath = true;
             QuadsManager.Instance.StartFindPath(currentPathRequest.pathStart,currentPathRequest.pathEnd);
         }
     }
-    public void FinishedProcessingPath(Vector3[] path, bool success) {//找完了
-        currentPathRequest.callback(path,success);//找完了,就告诉寻路的人找到的路线和结果
-        isProcessingPath = false;//上一条找完了,目前没有找的
-        TryProcessNext();//再看看有没有更多的路去寻找
+    public void FinishedProcessingPath(Vector3[] path, bool success) {
+        currentPathRequest.callback(path,success);
+        isProcessingPath = false;
+        TryProcessNext();
     }
     struct PathRequest {
         public Vector3 pathStart;

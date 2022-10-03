@@ -10,7 +10,7 @@ public enum UIElement {
     TRAIT_PANEL
 }
 public class UIManager : SingletonManager<UIManager> {
-    //这个类主要是要控制在不同的游戏阶段该出现哪些UI
+    //to control which UI should be displaying in different game state
     [SerializeField]
     private GameObject cardPanel;
     [SerializeField]
@@ -24,8 +24,8 @@ public class UIManager : SingletonManager<UIManager> {
         foreach (var element in uiElements.Values) {
             element.SetActive(false);
         }
-        GameEventsManager.StartListening(GameEventTypeVoid.ENTER_DEPLOY_STATE,OnEnterDeployState);//第一次进来就会打开了
-        GameEventsManager.StartListening(GameEventTypeVoid.EXIT_PLAY_STATE,OnExitPlayState);//结束游戏才会消失
+        GameEventsManager.StartListening(GameEventTypeVoid.ENTER_DEPLOY_STATE,OnEnterDeployState);
+        GameEventsManager.StartListening(GameEventTypeVoid.EXIT_PLAY_STATE,OnExitPlayState);
     }
 
     void OnEnterDeployState(GameEventTypeVoid ev) {

@@ -11,7 +11,7 @@ public class Player : SingletonManager<Player> {
     private int currentLevel;
     public int CurrentLevel => currentLevel;
     private int totalAvailabeSpace;
-    public int TotalAvailabeSpace => totalAvailabeSpace;//总共的空间和等级大多数时候一样,但是有冠冕之类的
+    public int TotalAvailabeSpace => totalAvailabeSpace;
     private int currentExp;
     public int CurrentExp => currentExp;
     private int currentRefreshCost;
@@ -29,7 +29,7 @@ public class Player : SingletonManager<Player> {
         
     }
     private void OnEnterPlayState(GameEventTypeVoid ev) {
-        money = 200;//游戏初始化,那么金币清零
+        money = 200;//for testing
         currentLevel = 1;
         currentExp = 0;
         currentRefreshCost = GameRulesManager.defaultRefreshCost;
@@ -61,18 +61,17 @@ public class Player : SingletonManager<Player> {
         }
     }
     private void OnExpGain(GameEventTypeInt ev,int expGaining) {
-        //这里要加经验，然后计算有没有升级
         currentExp += expGaining;
         if(GameRulesManager.experienceRequirementByLevel.ContainsKey(currentLevel)) {
-            int currentExpRequirement = GameRulesManager.experienceRequirementByLevel[currentLevel];//知道当前升级所需经验
+            int currentExpRequirement = GameRulesManager.experienceRequirementByLevel[currentLevel];
             if(currentExp >= currentExpRequirement) {
-                //说明要升级了
+                //level up!
                 currentExp -= currentExpRequirement;
                 currentLevel += 1;
-                GameEventsManager.TriggerEvent(GameEventTypeInt.LEVEL_UP,currentLevel);//触发升级
+                GameEventsManager.TriggerEvent(GameEventTypeInt.LEVEL_UP,currentLevel);
                 GameEventsManager.TriggerEvent(GameEventTypeInt.UPDATE_LEVEL,currentLevel);
             }
-            //升不升级都要更新一下UI
+            //update ui stuff
             GameEventsManager.TriggerEvent(GameEventTypeInt.UPDATE_EXP,currentExp);
         }else {
             Debug.LogError("current level is not existing in the dictionary");
@@ -81,11 +80,11 @@ public class Player : SingletonManager<Player> {
     private void OnLevelUp(GameEventTypeInt ev,int targetLevel) {
         if(GameRulesManager.championDropRatesByLevel.ContainsKey(targetLevel)) {
             currentChampionDropRate = GameRulesManager.championDropRatesByLevel[targetLevel];
-            totalAvailabeSpace = targetLevel;//这里应该加上其他的buff,如果有的话
+            totalAvailabeSpace = targetLevel;
         }
     }
     private void OnEnterDeployState(GameEventTypeVoid ev) {
-        if(GameManager.isPlayStateStart) {//说明不是第一次进入
+        if(GameManager.isPlayStateStart) {
             GameEventsManager.TriggerEvent(GameEventTypeInt.GAIN_EXPERIENCE,GameRulesManager.defaultExpIncrementEachTurn);
         }
     }

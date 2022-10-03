@@ -22,12 +22,6 @@ public class MapGenerator : MonoBehaviour{
             GameObject go = Instantiate(prefab,parent);
             go.transform.position = map.CalculatePosition(item);
             go.transform.rotation = prefab.transform.rotation;
-            // if(go.TryGetComponent<Quad>(out Quad quad)) {
-            //     quad.node = new Node(true,go.transform.position,(int)item.x,(int)item.y);
-            // }else {
-            //     Debug.LogError("quad component is missing!");
-            // }
-            //在这里赋的值游戏运行之后会消失
         }
         
     }

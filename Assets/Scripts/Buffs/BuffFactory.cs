@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-public enum BuffTypeEnum {//何时触发这个Buff,首先羁绊会触发buff,有的是放到场上就能触发,有的是战斗开始触发,别的以后再添加吧
+public enum BuffTypeEnum {
     INSTANT,
     BATTLE_START
 
